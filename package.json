@@ -1,0 +1,15 @@
+{
+  "name": "court-piece-online",
+  "version": "1.0.0",
+  "description": "Court Piece — doston ke sath online khelne ka server (relay + game file)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
