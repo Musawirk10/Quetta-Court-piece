@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="ur-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#082018">
+<title>Quetta Court Piece</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Tahoma,sans-serif;
+    background:radial-gradient(1400px 900px at 50% 6%, #123f2e 0%, #082018 55%, #05130d 100%);
+    color:#f2ecdc; height:100vh; height:100dvh; overflow:hidden; user-select:none;
+    touch-action:manipulation;
+  }
+  :root{
+    --gold:#e7c568;
+    --gold-soft:#f3e3ac;
+    --cw: clamp(44px, calc((100vw - 30px) / 7.6), 78px);
+    --cw-s: clamp(40px, 12.5vmin, 62px);
+  }
+  @media (min-width:900px){ :root{ --cw: clamp(64px, 7vw, 86px); } }
+  #app{display:flex;flex-direction:column;height:100%;}
+
+  /* ============ HUD ============ */
+  .hud{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:stretch;padding:8px 8px 0;flex:none}
+  #teamUs{justify-self:start;width:100%;max-width:290px}
+  #teamThem{justify-self:end;width:100%;max-width:290px}
+  .team-pill{background:linear-gradient(160deg, rgba(27,74,54,.95), rgba(10,34,24,.97));border:1px solid rgba(231,197,104,.3);border-radius:12px;padding:5px 10px;display:flex;flex-direction:column;gap:1px;min-width:0;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)}
+  .team-pill.them{text-align:right;align-items:flex-end;border-color:rgba(159,212,187,.22)}
+  .tname{font-size:8.5px;letter-spacing:.16em;color:var(--gold);font-weight:800;white-space:nowrap}
+  .team-pill.them .tname{color:#9fd4bb}
+  .names{font-size:11px;font-weight:700;color:#e9f2ea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .trow{display:flex;gap:8px;align-items:center;font-size:10px;color:#b9cdbf}
+  .stars{letter-spacing:2px;font-size:10px;color:#4f6357}
+  .stars .on{color:var(--gold);text-shadow:0 0 6px rgba(231,197,104,.7)}
+  .hud-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:66px}
+  .trump-badge{width:34px;height:34px;border-radius:50%;background:linear-gradient(160deg,#fdf7e7,#e6d9b8);color:#101a14;display:grid;place-items:center;font-size:20px;box-shadow:0 2px 10px rgba(0,0,0,.45), inset 0 0 0 2px rgba(0,0,0,.08);line-height:1}
+  .trump-badge.red{color:#a32018}
+  .trump-badge.none{color:#7c8a7f;font-size:15px;font-weight:800}
+  .mini-lbl{font-size:7.5px;letter-spacing:.22em;color:#cfdcae;opacity:.85}
+  .hakim-lbl{font-size:9px;color:#cbd9cd;white-space:nowrap;max-width:104px;overflow:hidden;text-overflow:ellipsis}
+
+  /* ============ TABLE ============ */
+  .table{position:relative;flex:1 1 auto;min-height:0;margin:8px;border-radius:20px;overflow:hidden;
+    background:radial-gradient(ellipse at 50% 42%, #177a4e 0%, #0d5a39 42%, #07351f 78%, #052516 100%);
+    box-shadow:inset 0 0 70px rgba(0,0,0,.55), inset 0 0 0 2px rgba(231,197,104,.10), 0 16px 50px rgba(0,0,0,.55);
+    border:1px solid rgba(231,197,104,.18);
+  }
+  .table::before{content:'';position:absolute;inset:10px;border-radius:16px;border:1px solid rgba(231,197,104,.14);pointer-events:none;z-index:1}
+  .table::after{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);background-size:5px 5px;opacity:.5;pointer-events:none;z-index:1}
+  .table-actions{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:30}
+  .icon-btn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(231,197,104,.35);background:rgba(4,16,10,.6);color:#ecdfb6;font-size:14px;display:grid;place-items:center;cursor:pointer;padding:0}
+  .icon-btn:active{transform:scale(.94)}
+
+  /* ============ SEATS ============ */
+  .seat{position:absolute;z-index:8;display:flex;justify-content:center;pointer-events:none}
+  .seat-top{top:6px;left:50%;transform:translateX(-50%)}
+  .seat-bottom{bottom:4px;left:50%;transform:translateX(-50%)}
+  .seat-left{left:6px;top:50%;transform:translateY(-50%)}
+  .seat-right{right:6px;top:50%;transform:translateY(-50%)}
+  .seat-inner{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 8px;border-radius:14px;transition:background .3s, box-shadow .3s}
+  .seat-inner.active{background:rgba(231,197,104,.08);box-shadow:0 0 0 1px rgba(231,197,104,.35), 0 0 22px rgba(231,197,104,.18)}
+  .avatar{position:relative;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;color:#0b1a12;background:linear-gradient(160deg,#f2e3b6,#d9b96a);border:2px solid rgba(255,255,255,.55);box-shadow:0 3px 10px rgba(0,0,0,.45)}
+  .seat-inner.them .avatar{background:linear-gradient(160deg,#bfe0cf,#8fbfa6)}
+  .seat-inner.active .avatar{animation:pulseGlow 1.4s ease-in-out infinite}
+  @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 2px rgba(231,197,104,.35), 0 0 14px rgba(231,197,104,.25)}50%{box-shadow:0 0 0 3px rgba(231,197,104,.85), 0 0 22px rgba(231,197,104,.55)}}
+  .crown{position:absolute;top:-13px;left:50%;transform:translateX(-50%);display:flex;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
+  .streak-badge{position:absolute;top:-5px;right:-9px;min-width:16px;height:16px;border-radius:999px;background:#2a5c43;color:#eaf5ea;font-size:10px;font-weight:800;display:grid;place-items:center;border:1.5px solid rgba(255,255,255,.55);padding:0 3px;line-height:1}
+  .streak-badge.hot{background:linear-gradient(160deg,#f3dd9d,#dbb75c);color:#1a2418;border-color:#fff;box-shadow:0 0 10px rgba(231,197,104,.85);animation:pulseGlow 1.2s ease-in-out infinite}
+  .pts{display:inline-flex;align-items:center;gap:2px;flex:none}
+  .pt{width:5px;height:5px;border-radius:50%;background:#3d5648;display:inline-block}
+  .pt.on{background:var(--gold);box-shadow:0 0 5px rgba(231,197,104,.85)}
+  .got{color:#cfe0cf;font-weight:700}
+  .nm{font-size:11px;font-weight:800;color:#eef4e8;max-width:94px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .role{font-size:8px;letter-spacing:.14em;color:#a9c0b0;text-transform:uppercase}
+  .role.partner{color:#e7c568}
+  .seat-row{display:flex;align-items:center;gap:7px;pointer-events:auto}
+  .call-btn{border-radius:999px;padding:6px 9px;font-size:9.5px;font-weight:900;letter-spacing:.08em;cursor:pointer;border:1px solid;font-family:inherit;line-height:1;box-shadow:0 3px 10px rgba(0,0,0,.4)}
+  .call-btn.kot{background:linear-gradient(160deg,#f3dd9d,#dbb75c);color:#20180a;border-color:rgba(255,255,255,.5)}
+  .call-btn.peace{background:linear-gradient(160deg,#bfe0cf,#8fbfa6);color:#0d2218;border-color:rgba(255,255,255,.45)}
+  .call-btn:active{transform:scale(.95)}
+  .call-btn[disabled]{opacity:.32;pointer-events:none}
+  .slam-btn{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;cursor:pointer;border:1px solid rgba(255,255,255,.35);background:linear-gradient(160deg,#3a2c18,#241a0e);box-shadow:0 3px 10px rgba(0,0,0,.4);padding:0;flex:none}
+  .slam-btn.on{background:linear-gradient(160deg,#f3dd9d,#c9962e);border-color:#fff;box-shadow:0 0 16px rgba(231,197,104,.8);animation:pulseGlow 1s ease-in-out infinite}
+  .slam-btn:active{transform:scale(.92)}
+  .slot.slam .card{animation:slamIn .26s cubic-bezier(.2,1.55,.4,1)}
+  @keyframes slamIn{0%{transform:translateY(-46px) scale(1.38);opacity:.25}55%{transform:translateY(4px) scale(.95);opacity:1}100%{transform:none}}
+  .dust{position:fixed;width:13px;height:13px;border-radius:50%;background:rgba(210,184,132,.95);box-shadow:0 0 6px rgba(201,175,125,.5);pointer-events:none;z-index:130;transform:translate(-50%,-50%) scale(var(--s,1));animation:dustUp .8s ease-out forwards}
+  @keyframes dustUp{0%{opacity:.95;transform:translate(-50%,-50%) scale(calc(var(--s,1)*.45))}100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)), calc(-50% + var(--dy,-30px))) scale(calc(var(--s,1)*1.5))}}
+  #app.screen-shake{animation:shk .4s ease-out}
+  @keyframes shk{0%{transform:translate(0,0) rotate(0)}12%{transform:translate(-11px,7px) rotate(-.5deg)}26%{transform:translate(10px,-6px) rotate(.45deg)}40%{transform:translate(-8px,5px) rotate(-.35deg)}55%{transform:translate(7px,-4px) rotate(.3deg)}72%{transform:translate(-5px,3px) rotate(-.2deg)}88%{transform:translate(3px,-2px) rotate(.1deg)}100%{transform:translate(0,0) rotate(0)}}
+  .reveal{background:rgba(4,16,10,.9);border:1px solid rgba(231,197,104,.5);border-radius:8px;padding:3px 7px;font-size:9.5px;line-height:1.45;color:#f0e3bb;font-family:Georgia,serif;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.45);margin-top:1px}
+  .reveal .rv-red{color:#e05a4e}
+  .reveal .rv-h{font-size:6.5px;letter-spacing:.14em;color:var(--gold);font-family:inherit;font-weight:800;display:block;margin-bottom:1px}
+  .modal.w-reveal{width:min(780px,100%)}
+  .reveal-hand{margin-top:10px}
+  .reveal-hand .rv-name{font-size:11px;font-weight:800;letter-spacing:.06em;color:#f6e7b8;text-align:center;margin-bottom:2px}
+  .reveal-hand .hand{min-height:calc(var(--cw)*1.42);max-width:100%;padding:0}
+  .reveal-hand .card{--c:min(var(--cw), calc((min(100vw, 780px) - 70px)/7.8));margin-left:calc(var(--c)*-.44)}
+  .reveal-hand .card:first-child{margin-left:0}
+  .mini{display:flex;justify-content:center;align-items:flex-start;height:21px;margin-top:1px}
+  .mb{width:11px;height:16px;border-radius:3px;border:1px solid #ecd9a6;background:repeating-linear-gradient(135deg,#7e2033 0 3px,#9c2a42 3px 6px);margin-left:-6px;box-shadow:0 1px 2px rgba(0,0,0,.5);transform-origin:bottom center}
+  .mb:first-child{margin-left:0}
+
+  /* ============ TRICK GRID ============ */
+  .trick-grid{position:absolute;inset:0;z-index:5}
+  .slot{position:absolute;width:var(--cw-s);height:calc(var(--cw-s)*1.44);transform:translate(-50%,-50%);display:grid;place-items:center}
+  .slot-top{left:50%;top:25%}.slot-bottom{left:50%;top:77%}
+  .slot-left{left:29%;top:50%}.slot-right{left:71%;top:50%}
+  .slot .card{animation:none} /* played card seedha rahe - koi blink nahi */
+  .ghost{width:var(--cw-s);height:calc(var(--cw-s)*1.44);border:1px dashed rgba(255,255,255,.16);border-radius:6px;background:rgba(0,0,0,.06)}
+  .center-col{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none}
+  .pile-pill{display:flex;align-items:center;gap:5px;background:rgba(4,16,10,.68);border:1px solid rgba(231,197,104,.42);border-radius:999px;padding:2px 10px;font-size:11px;color:#f0e3bb;font-weight:700;white-space:nowrap;transition:opacity .2s;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .pile-pill b{color:#fff;font-size:14px}
+  .pile-pill.empty{opacity:.42}
+  .stack{position:relative;width:15px;height:12px;display:inline-block;flex:none}
+  .stack i{position:absolute;width:9px;height:12px;border-radius:2px;background:repeating-linear-gradient(135deg,#7e2033 0 2px,#9c2a42 2px 4px);border:1px solid #e3cf95;left:0;top:0}
+  .stack i:nth-child(2){left:3px;top:-2px}
+  .stack i:nth-child(3){left:6px;top:-4px}
+  .need-pill{font-size:9.5px;letter-spacing:.08em;color:#d7e3d3;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .need-pill b{color:var(--gold);font-size:11px}
+  .left-stack{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:center;gap:5px;z-index:9}
+  .rang-badge{position:relative;width:clamp(50px,13vmin,70px);height:clamp(50px,13vmin,70px);border-radius:50%;background:radial-gradient(circle at 35% 30%, #1d6b4a, #0a3b26 70%);border:1px solid rgba(231,197,104,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 0 14px rgba(0,0,0,.5), 0 0 20px rgba(0,0,0,.35);z-index:9}
+  .rang-badge .suit{font-size:clamp(21px,5.6vmin,30px);line-height:1;color:#f5efdc}
+  .rang-badge .lbl{font-size:7.5px;letter-spacing:.2em;color:var(--gold-soft);margin-top:1px;font-weight:700}
+  .rang-badge.red .suit{color:#e05a4e}
+  .chakka-badge{font-size:8px;font-weight:900;letter-spacing:.1em;color:#20180a;background:linear-gradient(160deg,#f3dd9d,#dbb75c);border-radius:999px;padding:2px 8px;box-shadow:0 2px 8px rgba(0,0,0,.4);white-space:nowrap}
+  .chakka-badge.denied{background:linear-gradient(160deg,#bfe0cf,#8fbfa6)}
+  .khowasha{margin:12px 2px 2px;border:1px solid rgba(231,197,104,.35);border-radius:12px;padding:9px 10px 10px;background:rgba(231,197,104,.07)}
+  .khowasha-title{font-size:9.5px;letter-spacing:.22em;font-weight:800;color:var(--gold-soft);text-align:center;margin-bottom:8px}
+  .khowasha-row{display:flex;gap:9px;justify-content:center}
+  .khowasha-btn{flex:1;max-width:136px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 7px;border-radius:11px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.22);color:#e9f0ea;cursor:pointer}
+  .khowasha-btn .kmark{font-size:16px;line-height:1;font-weight:900}
+  .khowasha-btn .kname{font-size:11.5px;font-weight:800;letter-spacing:.04em}
+  .khowasha-btn .ksub{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+  .khowasha-btn.k-sahi .kmark{color:#7fe0a8}
+  .khowasha-btn.k-ghalat .kmark{color:#ff8f85}
+  .khowasha-btn.on{transform:translateY(-1px)}
+  .khowasha-btn.k-sahi.on{background:rgba(90,200,140,.34);border-color:#9ff0c0;box-shadow:0 0 18px rgba(127,224,168,.6), inset 0 1px 0 rgba(255,255,255,.18);color:#eafff3}
+  .khowasha-btn.k-ghalat.on{background:rgba(224,90,90,.32);border-color:#ff9f96;box-shadow:0 0 18px rgba(255,143,133,.6), inset 0 1px 0 rgba(255,255,255,.14);color:#ffeceb}
+  .khowasha-btn.static{cursor:default}
+  .kmark.m-sahi{color:#7fe0a8}
+  .kmark.m-ghalat{color:#ff8f85}
+  .khowasha-partner{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding-top:7px;border-top:1px solid rgba(231,197,104,.18)}
+  .khowasha-partner .kp-name{font-size:10px;letter-spacing:.08em;color:#cfe0d4;font-weight:700}
+  .khowasha-partner .kp-mark{font-size:10.5px;font-weight:900;letter-spacing:.06em;padding:2px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.2)}
+  .khowasha-partner .kp-mark.sahi{color:#7fe0a8;border-color:#7fe0a8;background:rgba(90,200,140,.15)}
+  .khowasha-partner .kp-mark.ghalat{color:#ff8f85;border-color:#ff8f85;background:rgba(224,90,90,.15)}
+  .rang-badge.none .suit{color:#9fb3a5;font-weight:800;font-size:clamp(14px,4vmin,20px)}
+
+  /* ============ CARDS ============ */
+  .card{--c:64px;position:relative;flex:none;width:var(--c);height:calc(var(--c)*1.44);border-radius:calc(var(--c)*.13);
+    background:linear-gradient(155deg,#fffdf6 0%, #f6f0df 62%, #ece2c8 100%);
+    color:#1b241e;border:1px solid rgba(20,30,20,.22);
+    box-shadow:0 2px 6px rgba(0,0,0,.38), inset 0 1px 0 #fff;
+    font-family:Georgia,'Times New Roman',serif;
+    transition:transform .12s ease, opacity .2s ease, box-shadow .2s ease;
+  }
+  .card.red{color:#b3261e}
+  .card .r,.card .rb{position:absolute;display:flex;flex-direction:column;align-items:center;font-size:calc(var(--c)*.30);font-weight:700;line-height:.95}
+  .card .r{top:3.5%;left:8%}
+  .card .rb{bottom:3.5%;right:8%;transform:rotate(180deg)}
+  .card .r .s,.card .rb .s{font-size:calc(var(--c)*.24);line-height:1;margin-top:2%}
+  .card.ten .r,.card.ten .rb{font-size:calc(var(--c)*.255)}
+  .card .big{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--c)*.62);padding-top:6%;opacity:.95}
+  .slot .card{--c:var(--cw-s);box-shadow:0 3px 8px rgba(0,0,0,.45), inset 0 1px 0 #fff;animation:none}
+  .card.back{background:repeating-linear-gradient(135deg,#7e2033 0 6px,#9c2a42 6px 12px);border:1px solid #e3cf95;box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 2px 6px rgba(0,0,0,.4)}
+  .card.back::after{content:'';position:absolute;inset:12%;border:1px solid rgba(255,255,255,.28);border-radius:calc(var(--c)*.07)}
+  .card.dealt{animation:dealIn .16s ease-out}
+  @keyframes dealIn{from{transform:translateY(-14px) scale(.86);opacity:0}to{transform:none;opacity:1}}
+  .card.win{box-shadow:0 0 0 2.5px var(--gold), 0 0 20px rgba(231,197,104,.85), inset 0 1px 0 #fff !important}
+  @keyframes popIn{from{transform:scale(.8) translateY(6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+  /* ============ HAND ============ */
+  .handbar{flex:none;padding:2px 6px calc(8px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:3px}
+  .status{font-size:11px;color:#d7e3d3;display:flex;align-items:center;gap:6px;min-height:16px;text-align:center}
+  .status .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px rgba(231,197,104,.8);animation:blink 1s infinite;flex:none}
+  .status .dot.dim{background:#5d7466;box-shadow:none;animation:none}
+  @keyframes blink{50%{opacity:.35}}
+  .hand{display:flex;align-items:flex-end;justify-content:center;min-height:calc(var(--cw)*1.5);width:100%;max-width:800px;padding:0 8px}
+  .hand .card{--c:var(--cw);margin-left:calc(var(--cw)*-.44);box-shadow:0 2px 5px rgba(0,0,0,.4), inset 0 1px 0 #fff}
+  .hand .card:first-child{margin-left:0}
+  .hand .card.play{cursor:pointer;box-shadow:0 0 0 2px var(--gold), 0 5px 12px rgba(0,0,0,.45), inset 0 1px 0 #fff;transform:translateY(-5px)}
+  .hand .card.play:hover{transform:translateY(-14px);z-index:60}
+  .hand .card.dim{opacity:.28;filter:grayscale(.55)}
+  .hand .card:hover{z-index:61}
+
+  /* ============ MODALS ============ */
+  #modalRoot .overlay{position:fixed;inset:0;z-index:100;background:rgba(2,10,6,.74);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:14px}
+  .modal{width:min(520px,100%);max-height:94dvh;overflow:auto;background:linear-gradient(180deg,#103026,#0a2018);border:1px solid rgba(231,197,104,.4);border-radius:18px;padding:18px 16px;box-shadow:0 30px 90px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.04);animation:popOver .22s ease-out}
+  @keyframes popOver{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-head{font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:700;color:#f6e7b8;text-align:center;letter-spacing:.02em}
+  .modal-head .gold{color:var(--gold)}
+  .sub{font-size:12px;color:#b9cdbf;text-align:center;line-height:1.55;margin:6px 0 14px}
+  .hint{font-size:10px;color:#93a99a;text-align:center;margin:10px 0 0;line-height:1.55}
+  .team-block{border:1px solid rgba(231,197,104,.16);border-radius:12px;padding:10px;margin-bottom:10px;background:rgba(255,255,255,.03)}
+  .team-block.b .tb-title{color:#9fd4bb}
+  .tb-title{font-size:9px;letter-spacing:.16em;color:var(--gold);font-weight:800;margin-bottom:7px;text-transform:uppercase}
+  .id-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .id-field{display:flex;flex-direction:column;gap:3px;font-size:9px;color:#a9c0b0;letter-spacing:.14em}
+  .id-field input{background:rgba(255,255,255,.07);border:1px solid rgba(231,197,104,.25);border-radius:9px;color:#f2ecdc;padding:9px 10px;font-size:14px;font-weight:600;outline:none;font-family:inherit;width:100%}
+  .id-field input:focus{border-color:var(--gold);background:rgba(231,197,104,.1)}
+  .seat-choice{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:2px}
+  .seat-choice.two{grid-template-columns:repeat(2,1fr)}
+  .chip{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:#dfe9dd;border-radius:10px;padding:7px 4px;font-size:10px;cursor:pointer;display:flex;flex-direction:column;gap:1px;align-items:center;min-width:0;font-family:inherit}
+  .chip b{font-size:11px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip.active{border-color:var(--gold);background:rgba(231,197,104,.16);color:#fff}
+  .chip .me{font-size:7.5px;color:var(--gold);letter-spacing:.1em;min-height:9px}
+  .modal-actions{display:flex;flex-direction:column;margin-top:12px}
+  .btn-primary{width:100%;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:800;letter-spacing:.03em;color:#1a2418;cursor:pointer;background:linear-gradient(160deg,#f3dd9d,#dbb75c);box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6);font-family:inherit}
+  .btn-primary:active{transform:translateY(1px)}
+  .btn-ghost{width:100%;margin-top:8px;border-radius:12px;padding:11px;font-size:13px;font-weight:700;background:transparent;color:#e9dfc0;border:1px solid rgba(231,197,104,.35);cursor:pointer;font-family:inherit}
+  .result-head{font-family:Georgia,'Times New Roman',serif;font-size:26px;text-align:center;color:#f6e7b8}
+  .result-team{text-align:center;font-size:16px;font-weight:800;margin-top:6px;color:var(--gold)}
+  .result-team.them{color:#9fd4bb}
+  .score-big{text-align:center;font-family:Georgia,'Times New Roman',serif;font-size:44px;color:#fff;margin:8px 0 0;letter-spacing:.06em}
+  .score-big span{color:#7d9587;font-size:28px}
+  .courts-row{display:flex;justify-content:center;gap:22px;margin:12px 0;font-size:12px;color:#cfe0cf}
+  .courts-row .cr{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;max-width:46%}
+  .courts-row .cr .st{font-size:15px;letter-spacing:3px;color:#4f6357}
+  .courts-row .cr .ptrow{display:flex;gap:3px}
+  .courts-row .cr .ptrow .pt{width:8px;height:8px}
+  .courts-row .cr .crpts{font-size:10px;color:#a9c0b0;font-weight:700}
+  .courts-row .cr .st .on{color:var(--gold);text-shadow:0 0 8px rgba(231,197,104,.7)}
+  .courts-row .cr b{font-size:11px;color:#e9f2ea;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+  .note{font-size:11px;color:#b9cdbf;text-align:center;line-height:1.55;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:9px 10px;margin:4px 0 12px}
+  .rules-list{font-size:12px;color:#d5e2d4;line-height:1.6;padding-left:18px;margin:6px 0}
+  .rules-list li{margin-bottom:7px}
+  .rules-list b{color:#f0dc9f}
+  .first5{display:flex;justify-content:center;gap:7px;margin:2px 0 14px;flex-wrap:wrap}
+  .first5 .card{--c:clamp(44px,13vw,58px);box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 #fff;animation:popIn .25s ease-out}
+  .suit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:12px 0 6px}
+  .suit-btn{position:relative;border-radius:14px;padding:10px 8px;border:1px solid rgba(231,197,104,.35);background:rgba(255,255,255,.05);color:#f2ecdc;font-size:14px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;transition:background .15s, transform .1s}
+  .suit-btn .big-suit{font-size:34px;line-height:1}
+  .suit-btn.red .big-suit{color:#e05a4e}
+  .suit-btn:active{transform:scale(.97)}
+  .suit-btn.suggest{background:rgba(231,197,104,.14);border-color:rgba(231,197,104,.8)}
+  .suit-btn .cnt{font-size:10px;color:#bfd2c2;letter-spacing:.06em;font-weight:500}
+  .suit-btn .suit-name{font-size:13px;font-weight:800}
+  .suit-btn .suit-ranks{font-size:10.5px;color:#cfe0cf;font-weight:600;letter-spacing:.03em;min-height:13px}
+  .suit-btn.suggest .suit-ranks{color:#f0dc9f}
+  .suit-btn .big-suit{font-size:29px}
+  .suit-btn .tag-best{position:absolute;top:8px;right:10px;font-size:8px;letter-spacing:.12em;color:var(--gold);font-weight:800}
+
+  /* ============ NOTICE / CONFETTI ============ */
+  .notice{color:#f6e7b8;font-weight:700;background:rgba(231,197,104,.13);border:1px solid rgba(231,197,104,.35);padding:3px 11px;border-radius:999px;font-size:11px;animation:popIn .2s ease-out;max-width:92vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .confetti{position:fixed;top:-18px;width:8px;height:12px;z-index:120;pointer-events:none;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(112vh) rotate(720deg);opacity:.9}}
+
+  /* ============ SMALL SCREENS ============ */
+  @media (orientation:landscape) and (max-height:500px){
+    :root{--cw:clamp(30px, calc((100vw - 24px)/14.2), 54px)}
+    .hud{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);padding:4px 6px 0;gap:4px}
+    #teamUs,#teamThem{max-width:240px}
+    .team-pill{padding:3px 8px;border-radius:9px}
+    .tname{font-size:6.5px}
+    .names{font-size:9.5px}
+    .trow{font-size:8.5px;gap:5px}
+    .stars{font-size:8px}
+    .hud-center{min-width:52px}
+    .trump-badge{width:23px;height:23px;font-size:13px}
+    .mini-lbl{font-size:6px}
+    .hakim-lbl{font-size:7.5px;max-width:80px}
+    .table{margin:4px 6px;border-radius:14px}
+    .table::before{inset:6px;border-radius:10px}
+    .table-actions{top:4px;right:4px;gap:4px}
+    .icon-btn{width:23px;height:23px}
+    .icon-btn svg{width:12px;height:12px}
+    .seat-left{left:3px}.seat-right{right:3px}
+    .seat-top{top:2px}.seat-bottom{bottom:0px}
+    .seat-inner{padding:2px 6px;gap:0}
+    .avatar{width:23px;height:23px;font-size:11px;border-width:1.5px}
+    .nm{font-size:9px;max-width:76px}
+    .role{display:none}
+    .mini{height:11px;margin-top:0}
+    .mb{width:7px;height:10px;margin-left:-4px;border-radius:2px}
+    .seat .crown{top:-10px}
+    .seat .crown svg{width:9px;height:9px}
+    .slot-top{top:39%}.slot-bottom{top:61%}
+    .slot-left{left:31%}.slot-right{left:69%}
+    .rang-badge{width:clamp(34px,8.6dvh,46px);height:clamp(34px,8.6dvh,46px)}
+    .left-stack{left:6px;top:5px;gap:3px}
+    .rang-badge .suit{font-size:clamp(14px,3.8dvh,20px)}
+    .rang-badge .lbl{font-size:5.5px;margin-top:0}
+    .center-col{gap:2px}
+    .pile-pill{font-size:8px;padding:1px 6px}
+    .pile-pill b{font-size:9px}
+    .need-pill{display:none}
+    .slot-bottom{top:64%}
+    .handbar{padding:0 4px 3px;gap:0;max-height:34vh}
+    .status{min-height:10px;font-size:8.5px;gap:4px;line-height:1.15;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+    .status .notice{display:none}
+    .notice{font-size:9px;padding:2px 8px}
+    .status .dot{width:5px;height:5px}
+    .hand{min-height:0;max-height:calc(var(--cw)*1.5)}
+    .hand .card{--c:clamp(28px, calc((100vw - 24px)/15.5), 50px)}
+  }
+  @media (max-height:560px){
+    :root{--cw:clamp(34px, calc((100vw - 30px)/9.4), 62px);--cw-s:clamp(28px,8.4dvh,46px)}
+    .role{display:none}
+    .avatar{width:28px;height:28px;font-size:12px}
+    .mini{height:12px}
+    .mb{width:8px;height:11px;margin-left:-5px}
+    .hud{padding:4px 8px 0}
+    .handbar{padding-bottom:4px}
+    .seat .crown svg{width:11px;height:11px}
+    .slot-top{top:37%}.slot-bottom{top:63%}
+    .medallion{width:clamp(46px,11dvh,64px);height:clamp(46px,11dvh,64px)}
+    .medallion .suit{font-size:clamp(20px,5.4dvh,30px)}
+  }
+  @media (max-width:430px){
+    .nm{font-size:10px}
+    .seat-left .nm,.seat-right .nm{max-width:66px}
+    /* trick diamond shifted inward/up-down so it never hides behind a seat */
+    .slot-top{top:28.5%}
+    .slot-bottom{top:72.5%}
+    .slot-left{left:35%}
+    .slot-right{left:65%}
+  }
+  /* slightly smaller side seats so the diamond always has room */
+  .seat-left .seat-inner,.seat-right .seat-inner{padding:3px 5px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="hud">
+    <div class="team-pill" id="teamUs">
+      <div class="tname">AAP KI TEAM</div>
+      <div class="names">—</div>
+      <div class="trow"><span class="stars"><span>★</span><span>★</span><span>★</span></span><span>0/7</span></div>
+    </div>
+    <div class="hud-center">
+      <div class="trump-badge none" id="trumpBadge">?</div>
+      <div class="mini-lbl">RANG</div>
+      <div class="hakim-lbl" id="hakimLbl">Hakim: —</div>
+    </div>
+    <div class="team-pill them" id="teamThem">
+      <div class="tname">OPPONENTS</div>
+      <div class="names">—</div>
+      <div class="trow"><span>0/7</span><span class="stars"><span>★</span><span>★</span><span>★</span></span></div>
+    </div>
+  </header>
+
+  <main class="table" id="table">
+    <div class="table-actions">
+      <button class="icon-btn" id="btnRules" title="Rules" aria-label="Rules"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5V5.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"/></svg></button>
+      <button class="icon-btn" id="btnSound" title="Sound" aria-label="Sound"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>
+      <button class="icon-btn" id="btnNew" title="Naya Match" aria-label="Naya Match"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20.5 4.5v5h-5"/></svg></button>
+      <button class="icon-btn" id="btnExit" title="Bahar Niklein" aria-label="Bahar Niklein"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20H5V4h5"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9"/></svg></button>
+    </div>
+    <div class="seat seat-top" id="seatTop"></div>
+    <div class="seat seat-left" id="seatLeft"></div>
+    <div class="seat seat-right" id="seatRight"></div>
+    <div class="seat seat-bottom" id="seatBottom"></div>
+    <div class="trick-grid" id="trickGrid">
+      <div class="slot slot-top" id="slotTop"></div>
+      <div class="slot slot-left" id="slotLeft"></div>
+      <div class="left-stack">
+        <div class="rang-badge" id="rangBadge">
+          <span class="suit" id="medSuit">?</span>
+          <span class="lbl">RANG</span>
+        </div>
+        <div class="chakka-badge" id="chakkaBadge" style="display:none">CHAKKA</div>
+        <div class="center-col">
+          <div class="pile-pill empty" id="pilePill">
+            <span class="stack"><i></i><i></i><i></i></span><b id="pileCount">0</b><span>hath</span>
+          </div>
+          <div class="need-pill" id="needPill"><b>3</b> lagataar</div>
+        </div>
+      </div>
+      <div class="slot slot-right" id="slotRight"></div>
+      <div class="slot slot-bottom" id="slotBottom"></div>
+    </div>
+  </main>
+
+  <footer class="handbar">
+    <div class="status" id="status"></div>
+    <div class="hand" id="hand"></div>
+  </footer>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   COURT PIECE 52 — 4 IDs, 2 Teammates, 13 Tricks, 3 Courts
+   Team A: ID 1 & ID 3   ·   Team B: ID 2 & ID 4
+   ============================================================ */
+
+/* ---------- constants ---------- */
+const SUIT_ORDER = ['S','H','D','C'];
+const SUIT_CH = {S:'♠', H:'♥', D:'♦', C:'♣'};
+const SNAME = {S:'Spades', H:'Hearts', D:'Diamonds', C:'Clubs'};
+const RANKS = ['A','K','Q','J','10','9','8','7','6','5','4','3','2'];
+const RV = {A:14, K:13, Q:12, J:11, '10':10, 9:9, 8:8, 7:7, 6:6, 5:5, 4:4, 3:3, 2:2};
+const isRed = s => s === 'H' || s === 'D';
+const CROWN_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="#e7c568"><path d="M2.5 8.2l4.9 3.2L12 4.6l4.6 6.8 4.9-3.2-1.7 9.4H4.2L2.5 8.2z"/><rect x="4.4" y="18.6" width="15.2" height="2.1" rx="1"/></svg>';
+const SLAM_SVG = '<svg viewBox="0 0 28 28" width="21" height="21" aria-hidden="true">' +
+  '<g transform="rotate(14 14 9)"><rect x="8.2" y="1.6" width="11.6" height="14.4" rx="1.8" fill="#f7f0dd" stroke="#1b2a1c" stroke-width="1.3"/><path d="M14 5.2l1.8 2.7-1.8 2.7-1.8-2.7z" fill="#b3261e"/></g>' +
+  '<path d="M7.2 14.2c-1.3 1.1-1.6 3-.6 4.3l2.1 2.7c1.2 1.6 2.9 2.4 5 2.4h2.9c2.9 0 4.7-1.8 4.7-4.5v-2.2c0-1-.8-1.7-1.8-1.7h-3.4c.5-.9 0-1.8-1-1.8h-2.2c-1.4 0-2.4.8-2.9 1.8z" fill="#e9c49c" stroke="#1b2a1c" stroke-width="1.3" stroke-linejoin="round"/>' +
+  '<path d="M12.3 18.2h7.4M11.8 20.7h8.2" stroke="#1b2a1c" stroke-width="1.1" stroke-linecap="round" opacity=".75"/>' +
+  '<path d="M3.4 6.5v5.2M24.6 6.5v5.2M1.9 12.6l1.7-1.9M26.1 12.6l-1.7-1.9" stroke="#f3dd9d" stroke-width="1.7" stroke-linecap="round"/>' +
+  '<path d="M6 26.2h16M9.5 24.6l-2 1.6M18.5 24.6l2 1.6" stroke="#f3dd9d" stroke-width="1.5" stroke-linecap="round"/></svg>';
+const TROPHY_SVG = '<svg viewBox="0 0 24 24" width="24" height="24" fill="#e7c568"><path d="M7 3h10v4.2A5 5 0 0 1 7 7.2V3z"/><path d="M7 4.4H3.6a3.4 3.4 0 0 0 3.4 3.6M17 4.4h3.4a3.4 3.4 0 0 1-3.4 3.6" stroke="#e7c568" stroke-width="1.5" fill="none"/><path d="M10.4 13.2h3.2v2.9h4.1v2.2H6.3v-2.2h4.1v-2.9z"/></svg>';
+
+/* ---------- tiny helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const initial = n => { const t = String(n || '').trim(); return t ? t[0].toUpperCase() : '?'; };
+const teamOf = seat => seat % 2;
+const partnerOf = seat => (seat + 2) % 4;
+
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function makeDeck(){
+  const d = [];
+  for (const s of SUIT_ORDER) for (const r of RANKS) d.push({r, s, id: r + s});
+  return d;
+}
+/* Hath ki tarteeb:
+   kala pan (♠) → eent (♦) → chirhi (♣) → lal pan (♥)
+   Yani kale aur surkh kabhi milte nahi. Agar koi suit na ho to
+   doosre rang ka patta darmiyan daal diya jata hai. */
+function suitLayout(presentSuits){
+  const blacks = ['S', 'C'].filter(x => presentSuits.has(x));   // kala pan, chirhi
+  const reds   = ['D', 'H'].filter(x => presentSuits.has(x));   // eent, lal pan
+  if (!blacks.length) return reds.slice();
+  if (!reds.length)   return blacks.slice();
+
+  // do tarteeben banao: ek kala se shuru, ek surkh se
+  const build = (startBlack) => {
+    const out = [];
+    let b = 0, r = 0, black = startBlack;
+    while (b < blacks.length || r < reds.length){
+      if (black && b < blacks.length){ out.push(blacks[b++]); black = false; }
+      else if (!black && r < reds.length){ out.push(reds[r++]); black = true; }
+      else if (b < blacks.length){ out.push(blacks[b++]); }
+      else if (r < reds.length){ out.push(reds[r++]); }
+      else break;
+    }
+    return out;
+  };
+  const violations = (arr) => {
+    let v = 0;
+    for (let i = 1; i < arr.length; i++){
+      const a = arr[i-1], b = arr[i];
+      if (a === b) continue;
+      const aBlack = (a === 'S' || a === 'C'), bBlack = (b === 'S' || b === 'C');
+      if (aBlack === bBlack) v++;      // do kale ya do surkh saath saath = mix
+    }
+    return v;
+  };
+  const priority = { S: 0, D: 1, C: 2, H: 3 };   // kala pan > eent > chirhi > lal pan
+  const cands = [build(true), build(false)];
+  cands.sort((x, y) => violations(x) - violations(y) || priority[x[0]] - priority[y[0]]);
+  return cands[0];
+}
+
+function sortHand(hand, trump){
+  const present = new Set(hand.map(c => c.s));
+  const layout = suitLayout(present);
+  const pos = {};
+  layout.forEach((su, i) => { pos[su] = i; });
+  return hand.slice().sort((a, b) => {
+    const pa = (pos[a.s] != null ? pos[a.s] : 9);
+    const pb = (pos[b.s] != null ? pos[b.s] : 9);
+    return pa - pb || RV[b.r] - RV[a.r];
+  });
+}
+
+/* ---------- state ---------- */
+let G = null;
+let GEN = 0;          // generation counter: stale timers die instantly
+let SPEED = 1;        // animation time multiplier (tests use tiny values)
+let soundOn = true;
+let toastTimer = null;
+
+let setup = { names: ['Khiladi', 'Khan Sahab', 'Chacha Jan', 'Malik Sahab'], humanSeat: 0, target: 7, streakMode: 'player' };
+let draft = { names: setup.names.slice(), humanSeat: setup.humanSeat, streakMode: setup.streakMode };
+const stats = { matches: 0, rounds: 0, results: [], hakimLog: [] };
+
+function later(ms, fn){
+  if (typeof netIsClient === 'function' && netIsClient()) return;   // online client: sirf host chalata he
+  const g = GEN;
+  const run = () => {
+    if (g !== GEN) return;
+    if (G && G.paused){ setTimeout(run, 200); return; }
+    fn();
+  };
+  setTimeout(run, Math.max(0, ms * SPEED));
+}
+let NOTICE = null;      // {text, until}
+function toast(msg){
+  NOTICE = {text: msg, until: Date.now() + 2400};
+  renderStatus();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { if (NOTICE && Date.now() >= NOTICE.until){ NOTICE = null; renderStatus(); } }, 2450);
+}
+
+/* ============================================================
+   SOUND (WebAudio — no files needed)
+   ============================================================ */
+let audioCtx = null;
+function initAudio(){
+  try{
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e){}
+}
+function tone(freq, dur, type, vol, delay, atk){
+  if (!audioCtx || !soundOn) return;
+  try{
+    const t0 = audioCtx.currentTime + (delay || 0);
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.05, t0 + (atk != null ? atk : 0.012));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.03);
+  } catch(e){}
+}
+function noiseBurst(dur, vol, freq, delay){
+  if (!audioCtx || !soundOn) return;
+  try{
+    const t0 = audioCtx.currentTime + (delay || 0);
+    const len = Math.max(1, Math.floor(audioCtx.sampleRate * dur));
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.value = freq || 1400;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(vol || 0.2, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+    src.start(t0); src.stop(t0 + dur + 0.02);
+  } catch(e){}
+}
+function sfx(name){
+  if (!soundOn || !audioCtx) return;
+  switch(name){
+    case 'play': tone(560, 0.05, 'triangle', 0.035); break;
+    case 'click': tone(720, 0.035, 'square', 0.025); break;
+    case 'trump': tone(392, 0.09, 'sine', 0.05); tone(523, 0.12, 'sine', 0.05, 0.1); break;
+    case 'court': [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.13, 'triangle', 0.055, i * 0.1)); break;
+    case 'lose': tone(330, 0.14, 'sine', 0.045); tone(247, 0.22, 'sine', 0.045, 0.14); break;
+    case 'slam':
+      noiseBurst(0.035, 1.5, 4200);          // CHATAAK — patta zameen par takraya (full power)
+      tone(190, 0.09, 'triangle', 1.3, 0, 0.002);  // tez thwack
+      tone(92, 0.16, 'sine', 1.45, 0.004, 0.003);  // bhari THUD
+      tone(52, 0.22, 'sine', 1.2, 0.012, 0.006);   // gehri gunj (chhoti)
+      noiseBurst(0.12, 1.0, 900, 0.008);     // ghati/matti ka phattah
+      tone(340, 0.045, 'square', 0.7, 0, 0.001);   // slap crack
+      break;
+  }
+}
+function toggleSound(){
+  soundOn = !soundOn;
+  try{ localStorage.setItem('cp_sound', soundOn ? '1' : '0'); } catch(e){}
+  updateSoundBtn();
+  if (soundOn){ initAudio(); sfx('click'); }
+}
+function updateSoundBtn(){
+  const b = $('btnSound');
+  if (b) b.innerHTML = soundOn ? SOUND_ON_SVG : SOUND_OFF_SVG;
+}
+const SOUND_ON_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>';
+const SOUND_OFF_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9H4z" opacity=".55"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>';
+
+/* ============================================================
+   MATCH / ROUND FLOW
+   ============================================================ */
+function startMatch(opts){
+  if (typeof netIsClient === 'function' && netIsClient()) return;
+  GEN++;
+  const o = opts || setup;
+  setup = {
+    names: (o.names || setup.names).map((n, i) => (String(n || '').trim() || ('Player ' + (i + 1)))).slice(0, 4),
+    humanSeat: (o.humanSeat != null ? o.humanSeat : setup.humanSeat),
+    target: o.target || 7,
+    streakMode: 'player'   // lagataar hath sirf ek hi khelari ke — sathi ki jeet par reset
+  };
+  G = {
+    names: setup.names.slice(),
+    humanSeat: setup.humanSeat,
+    target: setup.target,
+    streakMode: setup.streakMode,
+    votes: {},
+    courts: [0, 0],
+    hakim: setup.humanSeat,
+    nextHakim: null,
+    phase: 'idle',
+    paused: false,
+    busy: false,
+    tricks: [0, 0],
+    hands: [[], [], [], []],
+    deck: [],
+    trump: null,
+    trick: [],
+    turn: null,
+    winnerSeat: null,
+    roundTeam: null,
+    roundKot: false,
+    roundGain: 0,
+    matchOver: false,
+    matchWinner: null,
+    reveal: [],
+    roundPeace: false,
+    peaceWinner: null,
+    forcedWin: null,
+    roundForced: false,
+    kotCall: null,
+    peaceCall: null,
+    chakkaCall: null,
+    resolveKind: null
+  };
+  stats.matches++;
+  closeModal();
+  startRound();
+}
+
+const DEAL_MS = 85;   // ek patta dene ka waqt (SPEED se scale hota hai)
+
+function startRound(){
+  GEN++;
+  stats.rounds++;
+  stats.hakimLog.push({ hakim: G.hakim, matches: stats.matches });
+  G.phase = 'dealing';
+  G.paused = false;
+  G.busy = true;
+  G.hands = [[], [], [], []];
+  G.deck = shuffle(makeDeck());
+  G.tricks = [0, 0];          // uthai hui (collected) baaziyan
+  G.center = [];              // beech ka pile: [{winner, cards:[...4]}]
+  G.streak = { seat: null, count: 0 };   // lagataar kis khelari ke
+  G.pairMode = false;         // pehli collection ke baad 2-2 mode
+  G.plays = 0;                // is deal me kitni baazi kheli gayi
+  G.lastTrickWinner = null;
+  G.trump = null;
+  G.trick = [];
+  G.turn = null;
+  G.winnerSeat = null;
+  G.roundTeam = null;
+  G.roundKot = false;
+  G.roundGain = 0;
+  G.roundLastTake = 0;
+  G.reveal = [];
+  G.roundPeace = false;
+  G.peaceWinner = null;
+  G.forcedWin = null;
+  G.roundForced = false;
+  G.kotCall = null;        // {team, at}
+  G.peaceCall = null;      // {team, at}
+  G.khowasha = null;       // Khowasha (aap): 'sahi' | 'ghalat' | null
+  G.khowashaPartner = null; // Khowasha (saathi)
+  G.khowashaFor = null;    // 'kot' | 'peace' | 'chakka'
+  G.chakkaCall = null;     // {team, by, status}
+  G.resolveKind = null;    // natija kis wajah se aaya
+  G.nextHakim = null;
+  // TEEN HAAth: pehla haath 5 patte, phir 4, phir 4 — ek ek patta baanta jata hai
+  G.schedule = [];
+  [5, 4, 4].forEach((n, batch) => {
+    for (let r = 0; r < n; r++){
+      for (let off = 1; off <= 4; off++){
+        G.schedule.push({ seat: (G.hakim + off) % 4, batch });   // ulti garhi: daayen se shuru
+      }
+    }
+  });
+  G.si = 0;
+  G.haath = 1;
+  render();
+  later(240, dealTick);
+}
+
+function dealTick(){
+  if (!G || G.phase !== 'dealing') return;
+  if (G.paused){ later(180, dealTick); return; }
+  if (!G.trump && G.si >= 20){ askTrump(); return; }
+  if (G.si >= G.schedule.length){ finishDeal(); return; }
+  const step = G.schedule[G.si];
+  G.hands[step.seat].push(G.deck.pop());
+  G.haath = step.batch + 1;
+  G.si++;
+  render();
+  later(DEAL_MS, dealTick);
+}
+
+function askTrump(){
+  if (!G || G.phase !== 'dealing') return;
+  G.phase = 'trump';
+  render();
+  if (G.hakim === G.humanSeat){
+    if (window.__CP_AUTO_HUMAN){
+      later(40, () => { if (G && G.phase === 'trump') applyTrump(aiPickTrump(G.humanSeat)); });
+    } else {
+      openTrumpModal();      // 5 patte + Hokm ke options
+    }
+  } else if (typeof netOnline === 'function' && netOnline()){
+    if (typeof netUi === 'function') netUi('askTrump');   // remote hakim khelega
+  } else {
+    later(1000, () => {
+      if (!G || G.phase !== 'trump') return;
+      applyTrump(aiPickTrump(G.hakim));
+    });
+  }
+}
+
+function applyTrump(suit){
+  if (typeof netAct === 'function' && netAct({ t: 'trump', suit })) return;
+  if (!G || G.phase !== 'trump') return;
+  if (G.trick.length) return;
+  G.trump = suit;
+  closeModal();
+  const who = G.hakim === G.humanSeat ? 'Aap' : G.names[G.hakim];
+  toast(who + ' ne Rang ' + SUIT_CH[suit] + ' ' + SNAME[suit] + ' chuna');
+  sfx('trump');
+
+  // CHAKKA: agar Hakim ke paas rang ka A he to deal rok kar chakka poochho
+  const hasAce = (G.hands[G.hakim] || []).some(c => c.s === suit && c.r === 'A');
+  if (hasAce){
+    G.phase = 'chakka';
+    G.chakkaCall = null;
+    render();
+    if (G.hakim === G.humanSeat){
+      if (window.__CP_AUTO_HUMAN) later(40, () => { if (G && G.phase === 'chakka') pressChakka(); });
+      else openChakkaOfferModal();      // 5 patte + CHAKKA batan
+    } else if (typeof netOnline === 'function' && netOnline()){
+      if (typeof netUi === 'function') netUi('chakkaOffer');   // remote hakim sochega
+    } else {
+      later(900, aiChakkaOffer);
+    }
+    return;
+  }
+  continueDealAfterTrump();
+}
+
+function continueDealAfterTrump(){
+  if (!G) return;
+  if (G.chakkaCall && G.chakkaCall.status === 'pending') return;   // jawab abhi baqi he
+  // baqi do haath (4 + 4) khelte hue baant kar poore 13 patte
+  G.phase = 'dealing';
+  G.haath = 2;
+  render();
+  later(320, dealTick);
+}
+
+/* ---------- CHAKKA: offer (hakim ke paas rang ka A) ---------- */
+function openChakkaOfferModal(){
+  if (!G) return;
+  const hand = sortHand(G.hands[G.hakim] || [], G.trump);
+  const cardsRow = hand.map(c => cardHTML(c)).join('');
+  openOverlay(
+    '<div class="modal-head">' + CROWN_SVG + ' Chakka?</div>' +
+    '<p class="sub">Aap ke paas <b>' + SUIT_CH[G.trump] + ' ' + SNAME[G.trump] + ' ka A</b> he — ye aap ke <b>pehle 5 patte</b> hain.<br>Aap <b>CHAKKA</b> bol sakte hain ya khel jari rakh sakte hain.</p>' +
+    '<div class="first5">' + cardsRow + '</div>' +
+    '<div class="modal-actions">' +
+      '<button class="btn-primary" id="btnChakka">CHAKKA</button>' +
+      '<button class="btn-ghost" id="btnChakkaSkip">Nahi — Khel Jari Rakhein</button>' +
+    '</div>' +
+    '<p class="hint">Chakka bolne par doosri team se poochha jayega — "Han chakka he" to aap ko 2 points aur deal dobara shuru hogi.</p>'
+  );
+  $('btnChakka').addEventListener('click', () => { sfx('click'); pressChakka(); });
+  $('btnChakkaSkip').addEventListener('click', () => {
+    sfx('click');
+    closeModal();
+    if (typeof netAct === 'function' && netAct({ t: 'chakkaSkip' })) return;
+    if (G) continueDealAfterTrump();
+  });
+}
+
+function aiChakkaOffer(){
+  if (!G || G.phase !== 'chakka' || G.chakkaCall) return;
+  const trumps = (G.hands[G.hakim] || []).filter(c => c.s === G.trump);
+  // AI chakka bolta he agar uske paas A ke sath 2 aur trump bhi hon
+  if (trumps.length >= 3){
+    pressChakka();
+  } else {
+    continueDealAfterTrump();
+  }
+}
+
+/* ---------- CHAKKA: doosri team ka jawab ---------- */
+function pressChakka(){
+  if (typeof netAct === 'function' && netAct({ t: 'chakkaPress' })) return;
+  if (!G || G.phase !== 'chakka' || G.chakkaCall) return;
+  G.chakkaCall = { team: teamOf(G.hakim), by: G.hakim, status: 'pending' };
+  closeModal();
+  sfx('trump');
+  render();
+  const oppTeam = 1 - G.chakkaCall.team;
+  if (typeof netOnline === 'function' && netOnline()){
+    if (typeof netUi === 'function') netUi('chakkaResponse');
+    if (teamOf(G.humanSeat) === oppTeam) openChakkaResponseModal();
+    return;
+  }
+  if (teamOf(G.humanSeat) === oppTeam){
+    openChakkaResponseModal();       // human se poochho
+  } else {
+    later(900, aiChakkaResponse);    // AI jawab
+  }
+}
+
+function partnerSeatOf(seat){ return (seat + 2) % 4; }
+
+function handStrength(seat){
+  const hand = (G.hands && G.hands[seat]) || [];
+  let score = 0;
+  for (const c of hand){
+    if (G.trump && c.s === G.trump) score += 2;
+    if (c.r === 'A') score += 3; else if (c.r === 'K') score += 2; else if (c.r === 'Q') score += 1;
+  }
+  return score;
+}
+function aiKhowashaVote(seat){
+  // voter ka andaza (apne haath se): mazboot haath -> "sahi", kamzor -> mix
+  const st = (seat == null) ? partnerSeatOf(G.humanSeat) : seat;
+  const score = handStrength(st);
+  const p = Math.max(0.15, Math.min(0.85, score / 18));
+  return Math.random() < p ? 'sahi' : 'ghalat';
+}
+
+function khowashaMarkHTML(choice, cls){
+  if (choice === 'sahi') return '<span class="kp-mark sahi ' + (cls || '') + '">&#10003; Sahi</span>';
+  if (choice === 'ghalat') return '<span class="kp-mark ghalat ' + (cls || '') + '">&#10007; Ghalat</span>';
+  return '<span class="kp-mark ' + (cls || '') + '">—</span>';
+}
+
+function khowashaHTML(){
+  const pname = esc(G.names[partnerSeatOf(G.humanSeat)] || 'Saathi');
+  return '<div class="khowasha" id="khowashaBox">' +
+    '<div class="khowasha-title">KHOWASHA</div>' +
+    '<div class="khowasha-row">' +
+      '<button type="button" class="khowasha-btn k-sahi" name="Khowasha" data-khowasha="sahi">' +
+        '<span class="kmark">&#10003;</span><span class="kname">Khowasha</span><span class="ksub">sahi</span>' +
+      '</button>' +
+      '<button type="button" class="khowasha-btn k-ghalat" name="Khowasha" data-khowasha="ghalat">' +
+        '<span class="kmark">&#10007;</span><span class="kname">Khowasha</span><span class="ksub">ghalat</span>' +
+      '</button>' +
+    '</div>' +
+    '<div class="khowasha-partner" id="khowashaPartner">' +
+      '<span class="kp-name">' + pname + ' · Saathi</span>' +
+      khowashaMarkHTML(G.khowashaPartner, 'kp-live') +
+    '</div>' +
+  '</div>';
+}
+
+function setKhowasha(kind){
+  if (!G || (kind !== 'sahi' && kind !== 'ghalat')) return;
+  G.khowasha = (G.khowasha === kind) ? null : kind;
+  if (typeof NET !== 'undefined' && NET.on){
+    if (!G.votes) G.votes = {};
+    G.votes[G.humanSeat] = G.khowasha;
+    if (NET.host === false) netSend({ t: 'act', m: { t: 'khowasha', v: G.khowasha } });
+  }
+  const rec = (G.chakkaCall && G.chakkaCall.status === 'pending') ? G.chakkaCall : null;
+  if (rec) rec.khowasha = G.khowasha;
+  const box = $('khowashaBox');
+  if (box){
+    for (const b of box.querySelectorAll('.khowasha-btn')){
+      b.classList.toggle('on', b.dataset.khowasha === G.khowasha);
+    }
+  }
+  evaluateKhowasha();
+}
+
+function setKhowashaPartner(kind){
+  if (!G || (kind !== 'sahi' && kind !== 'ghalat')) return;
+  G.khowashaPartner = kind;
+  const rec = (G.chakkaCall && G.chakkaCall.status === 'pending') ? G.chakkaCall : null;
+  if (rec) rec.khowashaPartner = kind;
+  const wrap = $('khowashaPartner');
+  if (wrap){
+    const old = wrap.querySelector('.kp-mark');
+    if (old) old.outerHTML = khowashaMarkHTML(kind, 'kp-live');
+  }
+  evaluateKhowasha();
+}
+
+/* dono ka khowasha mil kar button ka faisla karte hain:
+   dono SAHI  -> "... Nahi" auto | dono GHALAT -> "Han ..." auto | 1-1 -> khud dabayein */
+let autoAnswerTimer = null;
+function cancelAutoAnswer(){
+  if (autoAnswerTimer){ clearTimeout(autoAnswerTimer); autoAnswerTimer = null; }
+}
+function answerBtnId(yes){
+  const f = G && G.khowashaFor;
+  if (f === 'peace') return yes ? 'btnPeaceYes' : 'btnPeaceNo';
+  if (f === 'chakka') return yes ? 'btnChakkaYes' : 'btnChakkaNo';
+  return yes ? 'btnKotYes' : 'btnKotNo';
+}
+function evaluateKhowasha(){
+  cancelAutoAnswer();
+  if (!G || !G.khowasha || !G.khowashaPartner) return;
+  if (G.khowasha !== G.khowashaPartner) return;   // 1-1 -> koi auto nahi, khud button dabayein
+  const yes = G.khowasha === 'ghalat';            // dono GHALAT -> Han | dono SAHI -> Nahi
+  const g = GEN;
+  autoAnswerTimer = setTimeout(() => {
+    autoAnswerTimer = null;
+    if (g !== GEN || !G) return;
+    const b = $(answerBtnId(yes));
+    if (b){
+      toast('Dono ka khowasha ' + G.khowasha + ' — ' + (yes ? 'Han' : 'Nahi') + ' auto dab raha he');
+      sfx('click');
+      b.click();
+    }
+  }, Math.max(0, 1100 * SPEED));
+}
+function openChakkaResponseModal(){
+  if (!G || !G.chakkaCall) return;
+  G.khowasha = null;
+  G.khowashaPartner = (typeof netOnline === 'function' && netOnline()) ? (G.khowashaPartner || null) : aiKhowashaVote();
+  G.khowashaFor = 'chakka';
+  const chTeam = G.chakkaCall.team;
+  const oppTeam = 1 - chTeam;
+  openOverlay(
+    '<div class="modal-head">CHAKKA!</div>' +
+    '<p class="sub"><b>' + teamName(chTeam) + '</b> ne <b>CHAKKA</b> bola he.<br>Kya sach me chakka he?</p>' +
+    '<div class="note" style="text-align:center">' + teamName(oppTeam) + ' ka jawab?</div>' +
+    '<div class="modal-actions">' +
+      '<button class="btn-primary" id="btnChakkaYes">Han Chakka He</button>' +
+      '<button class="btn-ghost" id="btnChakkaNo">Chakka Nahi He</button>' +
+    '</div>' +
+    khowashaHTML() +
+    '<p class="hint">"Han Chakka He" → chakka bolne wali team ko 2 points aur deal dobara shuru.<br>"Chakka Nahi He" → khel shuru; phir KOT hua to chakka wali team ko 3 points.</p>'
+  );
+  $('btnChakkaYes').addEventListener('click', () => { sfx('click'); if (typeof netAct === 'function' && netAct({ t: 'chakkaAnswer', v: true })) return; resolveChakka(true); });
+  $('btnChakkaNo').addEventListener('click', () => { sfx('click'); if (typeof netAct === 'function' && netAct({ t: 'chakkaAnswer', v: false })) return; resolveChakka(false); });
+}
+
+function aiChakkaResponse(){
+  if (!G || !G.chakkaCall || G.chakkaCall.status !== 'pending') return;
+  const oppTeam = 1 - G.chakkaCall.team;
+  const oppSeats = [0,1,2,3].filter(x => teamOf(x) === oppTeam);
+  const trumps = oppSeats.reduce((a, seat) =>
+    a + (G.hands[seat] || []).filter(c => c.s === G.trump).length, 0);
+  // agar doosri team ke paas trump na hone ke barabar hon to chakka maan lo
+  const accept = (trumps <= 1) && (Math.random() < 0.6);
+  resolveChakka(accept);
+}
+
+function resolveChakka(accepted){
+  if (!G || !G.chakkaCall) return;
+  if (typeof netUi === 'function') netUi('shadow', { fn: 'resolveChakka', args: [!!accepted] });
+  closeModal();
+  if (accepted){
+    G.chakkaCall.status = 'accepted';
+    G.paused = false;
+    G.forcedWin = { team: G.chakkaCall.team, kot: false, chakka: true, keepHakim: true };
+    render();
+    endRound();
+    return;
+  }
+  // "Chakka Nahi He" — khel shuru, chakka record rahega
+  G.chakkaCall.status = 'denied';
+  render();
+  toast('"Chakka Nahi He" — khel shuru!');
+  later(420, continueDealAfterTrump);
+}
+
+function finishDeal(){
+  G.phase = 'playing';
+  G.turn = G.hakim;
+  G.busy = false;
+  render();
+  later(340, drive);
+}
+
+/* ---------- trump AI / suggestion ---------- */
+function trumpScores(seat){
+  const hand = G.hands[seat] || [];
+  const out = {};
+  for (const s of SUIT_ORDER){
+    const cs = hand.filter(c => c.s === s);
+    out[s] = cs.length * 3 + cs.reduce((a, c) => a + (c.r === 'A' ? 3 : c.r === 'K' ? 2 : c.r === 'Q' ? 1.2 : c.r === 'J' ? 0.8 : 0), 0);
+  }
+  return out;
+}
+function bestTrumpFor(seat){
+  const sc = trumpScores(seat);
+  return SUIT_ORDER.reduce((a, b) => sc[b] > sc[a] ? b : a);
+}
+function aiPickTrump(seat){
+  const sc = trumpScores(seat);
+  let best = SUIT_ORDER[0], bv = -1;
+  for (const s of SUIT_ORDER){
+    const v = sc[s] + Math.random() * 0.8;
+    if (v > bv){ bv = v; best = s; }
+  }
+  return best;
+}
+
+/* ============================================================
+   TURNS & TRICKS
+   ============================================================ */
+function legalFromHand(hand, trick){
+  if (!trick.length) return hand.slice();
+  const led = trick[0].card.s;
+  const same = hand.filter(c => c.s === led);
+  return same.length ? same : hand.slice();
+}
+function legalCards(seat){ return legalFromHand(G.hands[seat], G.trick); }
+
+function beats(card, bestCard, led, trump){
+  if (card.s === bestCard.s) return RV[card.r] > RV[bestCard.r];
+  if (card.s === trump) return true;
+  if (bestCard.s === trump) return false;
+  return card.s === led;
+}
+function bestOfTrick(trick, trump){
+  const led = trick[0].card.s;
+  let best = trick[0];
+  for (let i = 1; i < trick.length; i++){
+    if (beats(trick[i].card, best.card, led, trump)) best = trick[i];
+  }
+  return best;
+}
+function trickWinner(){ return bestOfTrick(G.trick, G.trump); }
+
+function drive(){
+  if (!G || G.phase !== 'playing' || G.paused) return;
+  if (typeof netIsClient === 'function' && netIsClient()){ render(); return; }
+  if (window.__CP_MANUAL){ render(); return; }   // test/debug: koi khud na chale
+  if (G.busy) return;
+  if (G.turn == null) return;
+  if (typeof netOnline === 'function' && netOnline() && G.turn !== G.humanSeat){
+    render(); return;                            // remote insaan — network se aayega
+  }
+  if (G.turn === G.humanSeat){
+    if (window.__CP_AUTO_HUMAN){
+      G.busy = true;
+      render();
+      later(40, () => {
+        if (!G || G.phase !== 'playing' || !G.busy) return;
+        G.busy = false;
+        const legal = legalCards(G.humanSeat);
+        if (!legal.length) return;
+        doPlay(G.humanSeat, legal[Math.floor(Math.random() * legal.length)]);
+      });
+      return;
+    }
+    render();
+    return;
+  }
+  const seat = G.turn;
+  if (aiMaybeCall(seat)) return;   // AI ne challenge kiya — jawab ka intezar
+  G.busy = true;
+  render();
+  later(750, () => {
+    if (!G || G.phase !== 'playing') return;
+    G.busy = false;
+    const card = aiChoose(seat);
+    if (card) doPlay(seat, card);
+  });
+}
+
+function doPlay(seat, card){
+  if (!G || G.phase !== 'playing' || G.paused || G.busy) return;
+  if (G.turn !== seat || !card) return;
+  const legal = legalCards(seat);
+  if (!legal.some(c => c.id === card.id)) return;
+  const hand = G.hands[seat];
+  const idx = hand.findIndex(c => c.id === card.id);
+  if (idx < 0) return;
+
+  hand.splice(idx, 1);
+  G.trick.push({seat, card});
+  G.busy = true;
+  sfx('play');
+
+  if (G.trick.length === 4){
+    render();
+    later(820, resolveTrick);
+  } else {
+    G.turn = (seat + 1) % 4;   // ulti garhi: neeche -> daayen (counter-clockwise)
+    render();
+    later(520, () => {
+      if (!G || G.phase !== 'playing') return;
+      G.busy = false;
+      render();
+      drive();
+    });
+  }
+}
+
+function needStreak(){ return G.pairMode ? 2 : 3; }
+
+function resolveTrick(){
+  if (!G || G.phase !== 'playing' || G.trick.length !== 4) return;
+  const winner = trickWinner();
+  G.winnerSeat = winner.seat;
+  G.lastTrickWinner = winner.seat;
+  G.plays++;
+
+  // jeeta hua patta foran count NAHI hota — pehle centre pile me jata hai
+  G.center.push({ winner: winner.seat, cards: G.trick.slice() });
+
+  // lagataar jeet — SIRF wahi khelari; sathi ki jeet (upar bara patta) par count toot jata he
+  const sKey = (G.streakMode === 'team') ? teamOf(winner.seat) : winner.seat;
+  const cKey = (G.streak.seat == null || G.streak.count === 0) ? null
+             : ((G.streakMode === 'team') ? teamOf(G.streak.seat) : G.streak.seat);
+  if (cKey === sKey) G.streak.count++;
+  else { G.streak.seat = winner.seat; G.streak.count = 1; }
+  G.streak.seat = winner.seat;
+
+  const need = needStreak();
+  let took = 0;
+  if (G.streak.count >= need){
+    took = G.center.length;
+    G.tricks[teamOf(winner.seat)] += took;
+    G.center = [];
+    G.streak = { seat: null, count: 0 };
+    G.pairMode = true;          // ab se "do do hath" ka game
+  }
+  render();
+  if (took){
+    const who = winner.seat === G.humanSeat ? 'Aap' : G.names[winner.seat];
+    toast(who + ' ne lagataar ' + need + ' hath kar ke ' + took + ' baaziyan utha lin!');
+    sfx('court');
+  }
+  later(took ? 1500 : 1150, () => {
+    if (!G || G.phase !== 'playing') return;
+    G.trick = [];
+    G.winnerSeat = null;
+    if (G.plays >= 13){ endRound(); return; }
+    G.turn = winner.seat;
+    G.busy = false;
+    render();
+    drive();
+  });
+}
+
+/* ============================================================
+   AI
+   ============================================================ */
+function aiChoose(seat){
+  const legal = legalCards(seat);
+  if (!legal.length) return null;
+  if (!G.trick.length) return aiLead(seat, legal);
+  return aiFollow(seat, legal);
+}
+function cheapestOf(cards){
+  let best = cards[0];
+  for (const c of cards) if (RV[c.r] < RV[best.r]) best = c;
+  return best;
+}
+function iAmHot(seat){
+  const need = needStreak();
+  const mine = (G.streak.seat === seat) ? G.streak.count : 0;
+  return mine >= need - 1 || G.plays >= 12;   // ek aur jeet = pile / aakhri hath
+}
+function oppHot(seat){
+  const need = needStreak();
+  if (G.streak.seat == null) return false;
+  return G.streak.count >= need - 1 && teamOf(G.streak.seat) !== teamOf(seat);
+}
+function highestOf(cards){
+  let best = cards[0];
+  for (const c of cards) if (RV[c.r] > RV[best.r]) best = c;
+  return best;
+}
+function aiLead(seat, legal){
+  if (iAmHot(seat)){                 // ek aur hath = poora pile — mazboot patta
+    const trumps = legal.filter(c => c.s === G.trump);
+    return trumps.length ? highestOf(trumps) : highestOf(legal);
+  }
+  const trumps = legal.filter(c => c.s === G.trump);
+  const myTrumps = G.hands[seat].filter(c => c.s === G.trump).length;
+  const aceTrump = trumps.find(c => c.r === 'A');
+  if (aceTrump && myTrumps >= 3) return aceTrump;
+  const nonTrump = legal.filter(c => c.s !== G.trump);
+  const pool = (nonTrump.length ? nonTrump : legal).slice();
+  const cnt = {};
+  G.hands[seat].forEach(c => { cnt[c.s] = (cnt[c.s] || 0) + 1; });
+  pool.sort((a, b) => (cnt[b.s] || 0) - (cnt[a.s] || 0) || RV[a.r] - RV[b.r]);
+  return pool[0];
+}
+function aiFollow(seat, legal){
+  const led = G.trick[0].card.s;
+  const partner = partnerOf(seat);
+  const best = bestOfTrick(G.trick, G.trump);
+  const partnerWinning = best.seat === partner;
+  const urgent = iAmHot(seat) || oppHot(seat);
+
+  if (partnerWinning && !iAmHot(seat)){
+    const nonTrump = legal.filter(c => c.s !== G.trump);
+    return cheapestOf(nonTrump.length ? nonTrump : legal);
+  }
+  const winning = legal.filter(c => beats(c, best.card, led, G.trump));
+  if (winning.length){
+    if (urgent) return highestOf(winning);        // hath pakka karo
+    const nonTrump = winning.filter(c => c.s !== G.trump);
+    const pool = (nonTrump.length && led !== G.trump) ? nonTrump : winning;
+    return cheapestOf(pool);
+  }
+  const nonTrump = legal.filter(c => c.s !== G.trump);
+  return cheapestOf(nonTrump.length ? nonTrump : legal);
+}
+
+/* ============================================================
+   ROUND / MATCH END
+   ============================================================ */
+function endRound(){
+  if (typeof netIsClient === 'function' && netIsClient()) return;
+  if (!G || G.phase === 'roundEnd') return;
+  const forced = G.forcedWin;
+  // aakhri baazi jeetne wala baqi saara centre pile utha leta hai
+  let lastTake = 0;
+  if (!forced && !G.roundPeace && G.center.length && G.lastTrickWinner != null){
+    lastTake = G.center.length;
+    G.tricks[teamOf(G.lastTrickWinner)] += lastTake;
+    G.center = [];
+  }
+  if (G.roundPeace || forced){ G.center = []; G.trick = []; }
+  if (forced && !forced.chakka){ G.tricks = forced.team === 0 ? [13, 0] : [0, 13]; }
+
+  // ---------- nateeja: challenge (KOT / PEACE) ke sath ----------
+  const kc = G.kotCall, pc = G.peaceCall;
+  let wt, kot = false, gain = 1, kind = 'normal';
+
+  if (forced && forced.chakka){
+    // "Han Chakka He" -> chakka bolne wali team ko 2 points, deal dobara
+    wt = forced.team; kot = false; gain = 2; kind = 'chakkaAccepted';
+  } else if (G.chakkaCall && G.chakkaCall.status === 'denied'){
+    // Chakka deny hua — phir KOT hua?
+    const chTeam = G.chakkaCall.team, chOpp = 1 - chTeam;
+    if (G.tricks[chOpp] === 0){
+      // chakka wali team ne KOT kar diya -> 3 points
+      wt = chTeam; kot = true; gain = 3; kind = 'chakkaKot';
+    } else if (G.tricks[chTeam] === 0){
+      // rang banane wali (chakka) team hi KOT ho gayi -> doosri team ko 4 points
+      wt = chOpp; kot = true; gain = 4; kind = 'chakkaKotAgainst';
+    } else if (forced){
+      wt = forced.team; kot = true; gain = 1; kind = 'kotAccepted';
+    } else if (kc){
+      const oppTeam = 1 - kc.team;
+      if (G.tricks[oppTeam] === 0){ wt = kc.team; kot = true; gain = 2; kind = 'kotProven'; }
+      else if (G.tricks[oppTeam] >= 3){ wt = oppTeam; kot = false; gain = 1; kind = 'kotFailed'; if (G.tricks[kc.team] === 0 && kc.team === teamOf(G.hakim)){ gain = 3; kind = 'kotFailedSwept'; } }
+      else { wt = (G.tricks[0] > G.tricks[1] ? 0 : 1); kot = (G.tricks[1-wt]===0); gain = 1; kind = 'kotFailedSmall'; }
+    } else if (pc){
+      const callerTeam = pc.team, deniers = 1 - callerTeam;
+      if (G.tricks[deniers] < 7){ wt = callerTeam; gain = 1; kind = 'peaceProven'; }
+      else if (G.tricks[deniers] <= 12){ wt = deniers; gain = 1; kind = 'peaceFailed'; }
+      else if (callerTeam === teamOf(G.hakim)){ wt = deniers; kot = true; gain = 3; kind = 'peaceKotVsRang'; }
+      else { wt = deniers; kot = true; gain = 2; kind = 'peaceKotByRang'; }
+    } else if (G.roundPeace){
+      wt = null; gain = 0; kind = 'peaceAccepted';
+    } else {
+      wt = (G.tricks[0] > G.tricks[1] ? 0 : 1);
+      kot = (G.tricks[1 - wt] === 0);
+      gain = 1; kind = kot ? 'naturalKot' : 'normal'; if (kot && (1 - wt) === teamOf(G.hakim)){ gain = 2; kind = 'naturalKotRang'; }
+    }
+  } else if (forced){
+    // doosri team ne "Han KOT" maan liya -> kot bolne wali team ko sirf 1 point
+    wt = forced.team; kot = true; gain = 1; kind = 'kotAccepted';
+  } else if (kc){
+    const oppTeam = 1 - kc.team;
+    if (G.tricks[oppTeam] === 0){
+      // call sahi sabit hui — KOT hua
+      wt = kc.team; kot = true; gain = 2; kind = 'kotProven';
+    } else if (G.tricks[oppTeam] >= 3){
+      // call ghalat — jinhone "KOT Nahi Hai" kaha unhe 1 point
+      wt = oppTeam; kot = false; gain = 1; kind = 'kotFailed';
+      if (G.tricks[kc.team] === 0 && kc.team === teamOf(G.hakim)){
+        gain = 3; kind = 'kotFailedSwept';   // R2: Rang team ne KOT kaha, deny, khud KOT -> 3
+      }
+    } else {
+      wt = (G.tricks[0] > G.tricks[1] ? 0 : 1);
+      kot = (G.tricks[1 - wt] === 0);
+      gain = 1; kind = 'kotFailedSmall';
+    }
+  } else if (pc){
+    // "PEACE Nahi Hai" — khel jari raha
+    const callerTeam = pc.team;
+    const deniers = 1 - callerTeam;
+    if (G.tricks[deniers] < 7){
+      // unhon ne 7 se kam hath utaye — 1 point PEACE bolne wali team ko
+      wt = callerTeam; gain = 1; kind = 'peaceProven';
+    } else if (G.tricks[deniers] <= 12){
+      // "PEACE Nahi Hai" walon ne 7+ hath utaaye — unhe 1 point
+      wt = deniers; gain = 1; kind = 'peaceFailed';
+    } else {
+      // deniers ne poore 13 uthaaye — PEACE bolne wali team KOT ho gayi
+      kot = true; wt = deniers;
+      if (callerTeam === teamOf(G.hakim)){
+        gain = 3; kind = 'peaceKotVsRang';   // rang team (caller) KOT hui -> deniers ko 3
+      } else {
+        gain = 2; kind = 'peaceKotByRang';   // rang team (deniers) ne 13 uthaaye -> rang ko 2
+      }
+    }
+  } else if (G.roundPeace){
+    // doosri team ne "Han PEACE" maan liya — kisi ko point nahi
+    wt = null; gain = 0; kind = 'peaceAccepted';
+  } else {
+    wt = (G.tricks[0] > G.tricks[1] ? 0 : 1);
+    kot = (G.tricks[1 - wt] === 0);
+    gain = 1;                         // bina KOT call ke sweep = sirf 1 point
+    kind = kot ? 'naturalKot' : 'normal';
+    if (kot && (1 - wt) === teamOf(G.hakim)){
+      gain = 2; kind = 'naturalKotRang';    // R1: Rang team hi KOT ho gayi -> 2 points
+    }
+  }
+
+  const noPoint = (wt == null);
+  const lt = noPoint ? null : 1 - wt;
+  G.phase = 'roundEnd';
+  G.busy = true;
+  if (!noPoint) G.courts[wt] += gain;
+  G.roundTeam = wt;
+  G.roundKot = kot;
+  G.roundGain = gain;
+  G.resolveKind = kind;
+  const hakimTeam = teamOf(G.hakim);
+  // NAYA RULE — challenge NAKAM (claim fail): caller ki team ke HATH dekho (7 threshold)
+  //   caller team < 7  -> caller ke BAD wale ko deal (wo Rang banayega)
+  //   opponents < 7    -> jis ne pehle rang banaya tha, wahi hakim
+  let failCaller = null;
+  if (kind === 'kotFailed' || kind === 'kotFailedSmall' || kind === 'kotFailedSwept') failCaller = (kc && kc.caller != null) ? kc.caller : null;
+  else if (kind === 'peaceFailed' || kind === 'peaceKotVsRang' || kind === 'peaceKotByRang') failCaller = (pc && pc.caller != null) ? pc.caller : null;
+  else if (kind === 'chakkaKotAgainst') failCaller = G.hakim;
+  else if (G.chakkaCall && G.chakkaCall.status === 'denied' && (kind === 'normal' || kind === 'naturalKot')) failCaller = G.hakim;
+  let retained, hakimBase;
+  if (failCaller != null){
+    retained = G.tricks[teamOf(failCaller)] >= 7;
+    hakimBase = failCaller;
+  } else {
+    retained = noPoint ? true : ((forced && forced.keepHakim) ? true : (wt === hakimTeam));
+    hakimBase = G.hakim;
+  }
+  G.nextHakim = retained ? G.hakim : (hakimBase + 1) % 4;   // ulti garhi: caller/hakim ke daayen wala
+  G.roundFailCaller = failCaller;
+  G.roundForced = !!forced;
+  G.matchOver = noPoint ? false : (G.courts[wt] >= G.target);
+  G.matchWinner = G.matchOver ? wt : null;
+  stats.results.push({
+    winnerTeam: wt,
+    tricks: G.tricks.slice(),
+    courts: G.courts.slice(),
+    kot,
+    gain,
+    kind,
+    peace: !!G.roundPeace,
+    forced: !!forced,
+    kotCall: !!kc,
+    peaceCall: !!pc,
+    hakim: G.hakim,
+    nextHakim: G.nextHakim,
+    failCaller: G.roundFailCaller,
+    retained
+  });
+  render();
+  sfx(noPoint ? 'lose' : (wt === teamOf(G.humanSeat) ? 'court' : 'lose'));
+  later(750, () => {
+    if (!G) return;
+    if (typeof netUi === 'function') netUi('roundModal', { retained: !!retained, matchOver: !!G.matchOver });
+    if (G.matchOver) openMatchModal(retained);
+    else openRoundModal(retained);
+  });
+}
+
+function nextRound(){
+  if (typeof netAct === 'function' && netAct({ t: 'next' })) return;
+  if (!G || G.nextHakim == null) return;
+  G.hakim = G.nextHakim;
+  startRound();
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function render(){
+  if (!G) return;
+  try{
+    renderHUD();
+    renderSeats();
+    renderTrick();
+    renderHand();
+    renderStatus();
+  } catch(e){ /* never let UI break the game */ }
+}
+
+function starsHTML(n){
+  let s = '';
+  for (let i = 0; i < 3; i++) s += '<span class="' + (i < n ? 'on' : '') + '">★</span>';
+  return s;
+}
+function pointsHTML(n, max){
+  max = max || G.target || 7;
+  let s = '';
+  for (let i = 0; i < max; i++) s += '<span class="pt' + (i < n ? ' on' : '') + '"></span>';
+  return s;
+}
+function fillTeam(node, team, isUs){
+  if (!node) return;
+  node.classList.toggle('them', !isUs);
+  const tname = isUs ? 'AAP KI TEAM' : 'OPPONENTS';
+  const nm = esc(G.names[team]) + ' & ' + esc(G.names[team + 2]);
+  const max = G.target || 7;
+  const pts = Math.min(max, G.courts[team] || 0);
+  const got = G.tricks[team] || 0;
+  const right = '<span class="got">' + got + ' hath</span><span>' + pts + '/' + max + '</span><span class="pts">' + pointsHTML(pts, max) + '</span>';
+  const left  = '<span class="pts">' + pointsHTML(pts, max) + '</span><span>' + pts + '/' + max + '</span><span class="got">' + got + ' hath</span>';
+  node.innerHTML =
+    '<div class="tname">' + tname + '</div>' +
+    '<div class="names">' + nm + '</div>' +
+    '<div class="trow">' + (isUs ? left : right) + '</div>';
+}
+function renderHUD(){
+  const my = teamOf(G.humanSeat);
+  fillTeam($('teamUs'), my, true);
+  fillTeam($('teamThem'), 1 - my, false);
+  const badge = $('trumpBadge');
+  if (badge){
+    if (G.trump){ badge.textContent = SUIT_CH[G.trump]; badge.className = 'trump-badge' + (isRed(G.trump) ? ' red' : ''); }
+    else { badge.textContent = '?'; badge.className = 'trump-badge none'; }
+  }
+  const hak = $('hakimLbl');
+  if (hak) hak.textContent = 'Hakim: ' + esc(G.names[G.hakim] || '—');
+}
+
+function seatHTML(seat){
+  const me = seat === G.humanSeat;
+  const same = teamOf(seat) === teamOf(G.humanSeat);
+  const active = G.phase === 'playing' && G.turn === seat;
+  const name = G.names[seat];
+  const crown = G.hakim === seat ? '<span class="crown">' + CROWN_SVG + '</span>' : '';
+  const mini = me ? '' : miniHandHTML(G.hands[seat].length);
+  const role = me ? 'Aap' : (same ? 'Partner' : 'Opponent');
+  const need = (G.pairMode ? 2 : 3);
+  let sb = '';
+  const streakMine = G.streak.seat != null && (
+    G.streakMode === 'team' ? (teamOf(G.streak.seat) === teamOf(seat)) : (G.streak.seat === seat));
+  if (G.phase === 'playing' && streakMine && G.streak.count > 0){
+    sb = '<span class="streak-badge' + (G.streak.count >= need - 1 ? ' hot' : '') + '">' + G.streak.count + '</span>';
+  }
+  const revealed = Array.isArray(G.reveal) && G.reveal.indexOf(seat) >= 0;
+  const body = revealed ? revealHTML(G.hands[seat]) : mini;
+  const inner = '<div class="seat-inner ' + (same ? 'us' : 'them') + (active ? ' active' : '') + '">' +
+    '<div class="avatar">' + esc(initial(name)) + crown + sb + '</div>' +
+    '<div class="nm">' + esc(name) + '</div>' +
+    '<div class="role ' + (same && !me ? 'partner' : '') + '">' + role + '</div>' +
+    body +
+    '</div>';
+  if (!me) return inner;
+  const canCall = canCallNow();
+  return '<div class="seat-row">' +
+    '<button class="call-btn kot" data-call="kot"' + (canCall ? '' : ' disabled') + '>KOT</button>' +
+    inner +
+    '<button class="call-btn peace" data-call="peace"' + (canCall ? '' : ' disabled') + '>PEACE</button>' +
+    '<button class="slam-btn' + (slamArmed ? ' on' : '') + '" data-slam="1" title="Patta zameen par maaro (slam)">' + SLAM_SVG + '</button>' +
+    '</div>';
+}
+
+function revealHTML(hand){
+  const by = {};
+  (hand || []).forEach(c => { (by[c.s] = by[c.s] || []).push(c.r); });
+  let rows = '';
+  for (const su of SUIT_ORDER){
+    if (!by[su]) continue;
+    const rs = by[su].slice().sort((a, b) => RV[b] - RV[a]).join(' ');
+    rows += '<div><span class="' + (isRed(su) ? 'rv-red' : '') + '">' + SUIT_CH[su] + '</span> ' + rs + '</div>';
+  }
+  return '<div class="reveal"><span class="rv-h">AAPAS ME KHULE</span>' + (rows || '—') + '</div>';
+}
+function miniHandHTML(n){
+  if (!n) return '<div class="mini"></div>';
+  let out = '';
+  for (let i = 0; i < n; i++){
+    const rot = (i - (n - 1) / 2) * 6;
+    out += '<span class="mb" style="transform:rotate(' + rot.toFixed(1) + 'deg) translateY(' + (Math.abs(rot) * 0.35).toFixed(1) + 'px)"></span>';
+  }
+  return '<div class="mini">' + out + '</div>';
+}
+function renderSeats(){
+  const h = G.humanSeat;
+  // ulti garhi: agla khelari daayen (right) hota he
+  const pos = {bottom: h, right: (h + 1) % 4, top: (h + 2) % 4, left: (h + 3) % 4};
+  for (const p of ['bottom', 'left', 'top', 'right']){
+    const host = $('seat' + cap(p));
+    if (host) host.innerHTML = seatHTML(pos[p]);
+  }
+}
+
+function cardBackHTML(){ return '<div class="card back" aria-hidden="true"></div>'; }
+
+function cardHTML(card, opts){
+  opts = opts || {};
+  const cls = 'card' + (isRed(card.s) ? ' red' : '') + (card.r === '10' ? ' ten' : '') +
+    (opts.play ? ' play' : '') + (opts.dim ? ' dim' : '') + (opts.win ? ' win' : '');
+  return '<div class="' + cls + '" data-id="' + card.id + '" role="button" aria-label="' + card.r + ' of ' + SNAME[card.s] + '">' +
+    '<div class="r">' + card.r + '<span class="s">' + SUIT_CH[card.s] + '</span></div>' +
+    '<div class="big">' + SUIT_CH[card.s] + '</div>' +
+    '<div class="rb">' + card.r + '<span class="s">' + SUIT_CH[card.s] + '</span></div>' +
+    '</div>';
+}
+
+function renderTrick(){
+  const h = G.humanSeat;
+  const pos = {bottom: h, right: (h + 1) % 4, top: (h + 2) % 4, left: (h + 3) % 4};
+  const bySeat = {};
+  for (const t of G.trick) bySeat[t.seat] = t.card;
+  for (const p of ['bottom', 'left', 'top', 'right']){
+    const host = $('slot' + cap(p));
+    if (!host) continue;
+    const seat = pos[p];
+    const card = bySeat[seat];
+    const win = G.winnerSeat === seat;
+    const key = card ? (card.s + card.r + (win ? '|W' : '')) : 'ghost';
+    if (host.dataset.k !== key){
+      host.dataset.k = key;
+      host.innerHTML = card
+        ? cardHTML(card, {win: win})
+        : '<div class="ghost"></div>';
+    }
+  }
+  const med = $('medSuit');
+  const rang = $('rangBadge');
+  if (med && rang){
+    med.textContent = G.trump ? SUIT_CH[G.trump] : '?';
+    rang.className = 'rang-badge' + (G.trump ? (isRed(G.trump) ? ' red' : '') : ' none');
+  }
+  const cb = $('chakkaBadge');
+  if (cb){
+    const st = G.chakkaCall && G.chakkaCall.status;
+    cb.style.display = st ? '' : 'none';
+    cb.className = 'chakka-badge' + (st === 'denied' ? ' denied' : '');
+    cb.textContent = st === 'denied' ? 'CHAKKA NAHI' : 'CHAKKA';
+  }
+  const pileCount = $('pileCount');
+  const pile = G.center || [];
+  if (pileCount) pileCount.textContent = pile.length;
+  const pilePill = $('pilePill');
+  if (pilePill) pilePill.classList.toggle('empty', pile.length === 0);
+  const needPill = $('needPill');
+  if (needPill) needPill.innerHTML = '<b>' + needStreak() + '</b> lagataar';
+}
+
+/* ---------- SLAM: patta zameen par maarna (icon) ---------- */
+let slamArmed = false;
+function beatsCard(x, c, trump){
+  // kya patta x, patte c ko hara sakta he? (trick power: trump sab par bhari, warna suit+rank)
+  if (x.s === trump && c.s !== trump) return true;
+  if (x.s !== trump && c.s === trump) return false;
+  if (x.s === c.s) return RV[x.r] > RV[c.r];
+  return false;
+}
+function canSlam(card){
+  // SLAM = "mera patta YE HATH pakka jeet raha he" — har haal me, har LEGAL jawab par
+  //  (a) aakhri (4th) patta jo in-4 me sabse bara ho -> chota absolute bhi OK
+  //  (b) dead discard ya maidan me koi aisa patta jo ise hara de -> NAHI
+  //  (c) beech ka: kisi or ke paas aisa LEGAL patta jo ise hara de -> NAHI
+  //      (suit follow ki majboori me phansa "beater" — jo wo khel hi nahi sakta — beater NAHI)
+  //  (d) sab se uper (koi bhi ise legally na hara sake) -> SLAM
+  if (!G || !card) return false;
+  const t = G.trick || [];
+  const trump = G.trump;
+  const me = G.humanSeat;
+  const played = {};
+  t.forEach(pr => { played[pr.seat] = 1; });
+  // meri chal ke baad jo baqi khelenge (turn order me)
+  const after = [];
+  for (let i = 1; i <= 3; i++){
+    const st = (me + i) % 4;
+    if (st !== me && !played[st]) after.push(st);
+  }
+  const led = t.length ? t[0].card.s : card.s;
+  // follow suit: led suit haath me ho to wahi khelna hoga, warna koi bhi
+  const legalOf = (st) => {
+    const h = G.hands[st] || [];
+    const f = h.filter(c => c.s === led);
+    return f.length ? f : h;
+  };
+  const winnerSeat = (cards) => {
+    let w = cards[0];
+    for (let i = 1; i < cards.length; i++){
+      if (beatsCard(cards[i].card, w.card, trump)) w = cards[i];
+    }
+    return w.seat;
+  };
+  // har LEGAL combination par mera patta hi hath uthaye — tabhi SLAM
+  const rec = (cards, depth) => {
+    if (depth === after.length) return winnerSeat(cards) === me;
+    const st = after[depth];
+    const opts = legalOf(st);
+    if (!opts.length) return rec(cards, depth + 1);
+    for (const c of opts){
+      if (!rec(cards.concat([{ seat: st, card: c }]), depth + 1)) return false;
+    }
+    return true;
+  };
+  return rec(t.map(pr => ({ seat: pr.seat, card: pr.card })).concat([{ seat: me, card: card }]), 0);
+}
+function toggleSlam(){
+  slamArmed = !slamArmed;
+  render();
+}
+function dustAt(el){
+  if (!el || !el.getBoundingClientRect) return;
+  const r = el.getBoundingClientRect();
+  const x = r.left + r.width / 2, y = r.top + r.height * 0.92;
+  for (let i = 0; i < 14; i++){
+    const d = document.createElement('div');
+    d.className = 'dust';
+    const ang = (-90 + (Math.random() * 90 - 45)) * Math.PI / 180;
+    const dist = 22 + Math.random() * 58;
+    d.style.left = x + 'px';
+    d.style.top = y + 'px';
+    d.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+    d.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+    d.style.setProperty('--s', (0.7 + Math.random() * 1.2).toFixed(2));
+    document.body.appendChild(d);
+    setTimeout(() => { try{ d.remove(); }catch(e){} }, 850);
+  }
+}
+function shakeScreen(){
+  const el = document.getElementById('app');   // body par transform -> fixed dust paint nahi hoti
+  el.classList.remove('screen-shake');
+  void el.offsetWidth;
+  el.classList.add('screen-shake');
+  setTimeout(() => el.classList.remove('screen-shake'), 480);
+}
+function slotElFor(seat){
+  const rel = ((((seat != null ? seat : 0) - (G ? G.humanSeat : 0)) % 4) + 4) % 4;
+  return $(rel === 0 ? 'slotBottom' : rel === 1 ? 'slotRight' : rel === 2 ? 'slotTop' : 'slotLeft');
+}
+function slamFxAt(seat){
+  const slot = slotElFor(seat);
+  if (slot){
+    slot.classList.remove('slam');
+    void slot.offsetWidth;
+    slot.classList.add('slam');
+    setTimeout(() => slot.classList.remove('slam'), 700);
+  }
+  sfx('slam');
+  dustAt(slot);
+  shakeScreen();
+}
+function slamPlay(c){
+  slamFxAt(G.humanSeat);
+  doPlay(G.humanSeat, c);
+  if (typeof netUi === 'function') netUi('slamFx', { seat: G.humanSeat });
+}
+function renderHand(){
+  const handEl = $('hand');
+  if (!handEl) return;
+  const raw = G.hands[G.humanSeat] || [];
+  // jab tak Hokm nahi chuna, ghair-hakim apne patte nahi dekhte
+  const hidden = !G.trump && (G.phase === 'dealing' || G.phase === 'trump') && G.hakim !== G.humanSeat;
+  const cards = G.trump ? sortHand(raw, G.trump) : raw.slice();
+  const canPlay = G.phase === 'playing' && G.turn === G.humanSeat && !G.busy && !G.paused;
+  const legalIds = canPlay ? new Set(legalCards(G.humanSeat).map(c => c.id)) : null;
+  handEl.innerHTML = cards.map(c => hidden ? cardBackHTML() : cardHTML(c, {
+    play: !!(legalIds && legalIds.has(c.id)),
+    dim: !!(legalIds && !legalIds.has(c.id))
+  })).join('');
+  if (legalIds){
+    handEl.querySelectorAll('.card.play').forEach(nd => {
+      nd.addEventListener('click', () => {
+        if (!G) return;
+        const c = G.hands[G.humanSeat].find(x => x.id === nd.dataset.id);
+        if (!c) return;
+        if (slamArmed){
+          slamArmed = false;
+          if (canSlam(c)){
+            if (typeof netIsClient === 'function' && netIsClient()){
+              slamFxAt(G.humanSeat);
+              netSend({ t: 'act', m: { t: 'play', id: c.id, slam: true } });
+              render();
+              return;
+            }
+            slamPlay(c); return;
+          }
+        }
+        if (typeof netAct === 'function' && netAct({ t: 'play', id: c.id })) return;
+        sfx('click'); doPlay(G.humanSeat, c);
+      });
+    });
+  }
+  handEl.classList.toggle('myturn', !!legalIds);
+}
+
+function renderStatus(){
+  const s = $('status');
+  if (!s || !G) return;
+  if (NOTICE && Date.now() < NOTICE.until){
+    s.innerHTML = '<span class="notice">' + esc(NOTICE.text) + '</span>';
+    return;
+  }
+  if (G.phase === 'chakka'){
+    s.innerHTML = G.chakkaCall
+      ? '<span class="dot"></span> CHAKKA — doosri team ka jawab…'
+      : '<span class="dot"></span> Rang ka A aap ke paas he — CHAKKA?';
+  } else if (G.phase === 'dealing'){
+    s.innerHTML = '<span class="dot dim"></span> Patte baant rahe hain — Haath ' + (G.haath || 1) + '/3';
+  } else if (G.phase === 'trump'){
+    s.innerHTML = G.hakim === G.humanSeat
+      ? '<span class="dot"></span> Pehle 5 patte dekh kar Hokm chunein'
+      : '<span class="dot"></span> Haath 1/3 · Hakim Hokm chun raha hai…';
+  } else if (G.phase === 'playing'){
+    const need = needStreak();
+    const st = G.streak;
+    let extra = '';
+    if (st.seat != null && st.count > 0){
+      const who = G.streakMode === 'team'
+        ? (teamOf(st.seat) === teamOf(G.humanSeat) ? 'Aap ki team' : 'Doosri team')
+        : (st.seat === G.humanSeat ? 'Aap' : esc(G.names[st.seat]));
+      const left = Math.max(0, need - st.count);
+      extra = ' · ' + who + ' ' + st.count + '/' + need + (st.count >= need - 1 ? ' — pile taiyar!' : '');
+    }
+    if (G.turn === G.humanSeat) s.innerHTML = '<span class="dot"></span> Aap ki baari — patta chunein' + extra;
+    else s.innerHTML = '<span class="dot dim"></span> ' + esc(G.names[G.turn] || '') + ' ki baari…' + extra;
+  } else if (G.phase === 'roundEnd' || G.phase === 'matchEnd'){
+    s.innerHTML = 'Daav mukammal';
+  } else {
+    s.innerHTML = '';
+  }
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+function openOverlay(inner, cls){
+  const root = $('modalRoot');
+  if (!root) return;
+  root.innerHTML = '<div class="overlay"><div class="modal' + (cls ? ' ' + cls : '') + '">' + inner + '</div></div>';
+}
+function closeModal(){
+  const root = $('modalRoot');
+  if (root) root.innerHTML = '';
+}
+
+/* ---------- start / setup ---------- */
+function streakChipHTML(){
+  return '<div class="chip active"><span class="me">RULE</span>Lagataar hath<b>wahi khelari — 1 hi banda</b></div>';
+}
+function chipHTML(){
+  let out = '';
+  for (let i = 0; i < 4; i++){
+    out += '<button class="chip' + (i === draft.humanSeat ? ' active' : '') + '" data-seat="' + i + '">' +
+      '<span class="me">' + (i === draft.humanSeat ? 'AAP' : '&nbsp;') + '</span>' +
+      'ID ' + (i + 1) +
+      '<b>' + esc(draft.names[i] || '—') + '</b>' +
+      '</button>';
+  }
+  return out;
+}
+function idFieldHTML(i, label){
+  return '<label class="id-field"><span>' + label + '</span>' +
+    '<input id="nm' + i + '" maxlength="12" autocomplete="off" spellcheck="false" value="' + esc(draft.names[i] || '') + '"></label>';
+}
+const START_IMG = 'data:image/jpeg;base64,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bzXKeM/2o/iL4vtpLNL630W1lBV00yMxuy+hkJLD8CK8hooAeu6eYBmJLtyTzU8lqqo5VmynXI61WBIOQcEU4yyMCC7EHrk0AMooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKcuAwz070AaMeiO0iFpoxbtH5nnKCRjIBGPXJAxWtbk6dCk0Uyra225Z0CfNI+4gHp0PGDnjFMl1f7JDcPBd27wuALaBUyU5HUY44zn1NYdxqV1cyO7ykb12EL8o25zjA7ZoAS71C4vAqysu1SSFRQoyepwO9VqWkoAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigCwkalSSBwAee/FQyABzgYHpQHYdCfzpCcnJoASiiigAooooAKKKKACiiigAooooAKKKKALwtIzhQp5XO7dVKjNFACUUUUAFFFFABRRRQAUUUUAFFFFABTkGXAPQnFNooAsiNCikgc9qrU7e394/nTaACiiigAooooAKKKKACiiigAooooAKKv2GmtOHmninECRmTKLy+OwJ47/AKUUAUKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOlluJo9Q1VUmkVY4l2AMQFwyYx6UUUUAf/9k=';
+function openStartModal(){
+  GEN++;
+  if (G) G.paused = true;
+  closeModal();
+  openOverlay(
+    '<div class="modal-head" style="font-size:21px;letter-spacing:.04em">Quetta Court Piece</div>' +
+    '<img src="' + START_IMG + '" alt="" style="display:block;width:min(56%,230px);margin:12px auto 4px;border-radius:14px">' +
+    '<label class="id-field"><span>Aap ka naam</span><input id="nm0" maxlength="12" autocomplete="off" value="Khiladi"></label>' +
+    '<div class="modal-actions" style="flex-direction:column;gap:9px;margin-top:12px">' +
+      '<button class="btn-primary" id="btnStartGame">Offline Court Piece</button>' +
+      '<button class="btn-ghost" id="btnOnline">Doston ke sath Online</button>' +
+    '</div>' +
+    '<div style="text-align:center;margin:18px 0 8px">' +
+      '<div style="font-size:12px;letter-spacing:.22em;color:#e7c568">GAME MAKER</div>' +
+      '<div style="font-size:11px;letter-spacing:.16em;color:#9fd4bb;opacity:.9;margin-top:3px">MH-MANAGEMENT</div>' +
+    '</div>'
+  );
+  const inp = $('nm0');
+  if (inp){
+    inp.value = draft.names[0] || 'Khiladi';
+    inp.addEventListener('input', () => { draft.names[0] = inp.value; });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') startFromModal(); });
+    try { inp.focus(); inp.select(); } catch(e){}
+  }
+  $('btnStartGame').addEventListener('click', startFromModal);
+  $('btnOnline').addEventListener('click', () => {
+    sfx('click');
+    if (inp) draft.names[0] = (inp.value || '').trim() || 'Khiladi';
+    openOnlinePanel();
+  });
+}
+function refreshChips(){
+  const wrap = $('seatChoice');
+  if (wrap){ wrap.innerHTML = chipHTML(); }
+  const sw = $('streakChoice');
+  if (sw){ sw.innerHTML = streakChipHTML(); }
+  bindChips();
+}
+function bindChips(){
+  document.querySelectorAll('#modalRoot .chip[data-seat]').forEach(ch => {
+    ch.addEventListener('click', () => {
+      draft.humanSeat = +ch.dataset.seat;
+      refreshChips();
+    });
+  });
+  document.querySelectorAll('#modalRoot .chip[data-streak]').forEach(ch => {
+    ch.addEventListener('click', () => {
+      draft.streakMode = ch.dataset.streak;
+      refreshChips();
+    });
+  });
+}
+function startFromModal(){
+  const mine = String((draft.names[0] || '').trim() || 'Khiladi');
+  const names = [mine, 'Khan Sahab', 'Chacha Jan', 'Malik Sahab'];
+  draft.names = names.slice();
+  startMatch({names, humanSeat: 0, target: 7, streakMode: 'player'});
+}
+
+/* ---------- trump ---------- */
+function openTrumpModal(){
+  if (!G) return;
+  const hand = sortHand(G.hands[G.humanSeat] || [], null);
+  const suggest = bestTrumpFor(G.humanSeat);
+  // yahi 5 patte jo Hakim ne abhi uthaye hain
+  const cardsRow = hand.map(c => cardHTML(c)).join('');
+  let grid = '';
+  for (const s of SUIT_ORDER){
+    const cs = sortHand(hand.filter(c => c.s === s), null);
+    const ranks = cs.length ? cs.map(c => c.r).join('  ') : 'koi patta nahi';
+    grid += '<button class="suit-btn' + (isRed(s) ? ' red' : '') + (s === suggest ? ' suggest' : '') + '" data-suit="' + s + '">' +
+      (s === suggest ? '<span class="tag-best">BEST</span>' : '') +
+      '<span class="big-suit">' + SUIT_CH[s] + '</span>' +
+      '<span class="suit-name">' + SNAME[s] + '</span>' +
+      '<span class="suit-ranks">' + ranks + '</span>' +
+      '</button>';
+  }
+  openOverlay(
+    '<div class="modal-head">' + CROWN_SVG + ' Aap Hakim Hain!</div>' +
+    '<p class="sub">Pehla haath mukammal — ye aap ke <b>pehle 5 patte</b> hain.<br>Inhein dekh kar apna <b>Hokm (trump)</b> chunein.</p>' +
+    '<div class="first5">' + cardsRow + '</div>' +
+    '<div class="suit-grid">' + grid + '</div>' +
+    '<p class="hint">Hokm chunte hi baqi do haath (4 + 4) baant kar aap ke 13 patte poore ho jayenge.</p>'
+  );
+  document.querySelectorAll('#modalRoot .suit-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      if (!G || G.phase !== 'trump') return;
+      sfx('click');
+      applyTrump(b.dataset.suit);
+    });
+  });
+}
+
+/* ---------- round result ---------- */
+function teamName(t){ return esc(G.names[t]) + ' & ' + esc(G.names[t + 2]); }
+function courtsRow(){
+  const my = teamOf(G.humanSeat);
+  const max = G.target || 7;
+  const one = t => '<div class="cr"><span class="ptrow">' + pointsHTML(Math.min(max, G.courts[t] || 0), max) + '</span><b>' + teamName(t) + '</b><span class="crpts">' + Math.min(max, G.courts[t] || 0) + '/' + max + '</span></div>';
+  return '<div class="courts-row">' + one(my) + '<span style="align-self:center;color:#7d9587">vs</span>' + one(1 - my) + '</div>';
+}
+function outcomeText(){
+  const kind = G.resolveKind;
+  switch (kind){
+    case 'chakkaAccepted': return 'Doosri team ne <b>"Han Chakka He"</b> maan liya — <b>2 points</b> aur deal dobara shuru hogi.';
+    case 'chakkaKot':      return 'Chakka sabit hua! Chakka bolne wali team ne <b>KOT</b> kar diya — <b>3 points</b>.';
+    case 'chakkaKotAgainst': return 'Rang banane wali team hi <b>KOT</b> ho gayi — doosri team ko <b>4 points</b>!';
+    case 'kotAccepted':  return 'Doosri team ne <b>"Han KOT"</b> maan liya — deal yahin khatam. Kot bolne wali team ko <b>1 point</b>.';
+    case 'kotProven':    return 'Aap ne KOT kaha, unhon ne "KOT Nahi Hai" kaha — magar KOT sabit hua! <b>2 points</b>.';
+    case 'kotFailed':    return 'KOT sabit nahi hua aur unhon ne hath utaye — "KOT Nahi Hai" wale ko <b>1 point</b>.';
+    case 'kotFailedSwept': return 'Rang banane wali team ne KOT kaha, unhon ne "KOT Nahi Hai" kaha — aur phir <b>wo khud KOT</b> ho gayi! Doosri team ko <b>3 points</b>.';
+    case 'kotFailedSmall': return 'KOT sabit nahi hua, magar unke paas poori collection bhi nahi thi — normal nateeja.';
+    case 'peaceAccepted': return 'Doosri team ne <b>"Han PEACE"</b> maan liya — deal khatam, magar <b>kisi ko point nahi</b> mila.';
+    case 'peaceProven':  return 'PEACE bolne wali team ko <b>1 point</b> — doosri team ke 7 se kam hath the, aur unhe koi point nahi.';
+    case 'peaceFailed':    return 'Unhon ne "PEACE Nahi Hai" kaha aur <b>7+ hath</b> uthaaye — unhe <b>1 point</b>.';
+    case 'peaceKotVsRang': return 'Rang banane wali team ne PEACE kaha — aur phir <b>wo khud KOT</b> ho gayi! Doosri team ko <b>3 points</b>.';
+    case 'peaceKotByRang': return 'Rang banane wali team ne "PEACE Nahi Hai" kaha aur <b>poore 13 hath</b> uthaaye! Rang team ko <b>2 points</b>.';
+    case 'naturalKot':   return 'Saare 13 hath! (Bina KOT call ke) — <b>1 point</b>.';
+    case 'naturalKotRang': return 'Rang banane wali team hi <b>KOT</b> ho gayi — saare 13 hath! Doosri team ko <b>2 points</b>.';
+    default:             return '7 se ziyada hath — doosri team <b>PEACE</b> — <b>1 point</b>.';
+  }
+}
+
+function openRoundModal(retained){
+  if (!G || G.matchOver) return;
+  const wt = G.roundTeam;
+  const noPoint = (wt == null);
+  const lt = noPoint ? null : 1 - wt;
+  const mine = !noPoint && wt === teamOf(G.humanSeat);
+  openOverlay(
+    '<div class="result-head">' + (G.resolveKind === 'chakkaAccepted' ? 'CHAKKA!' : (noPoint ? 'KOI POINT NAHI' : (G.roundKot ? 'KOT!' : 'DEAL KHATAM'))) + '</div>' +
+    '<div class="result-team' + (noPoint ? ' them' : (mine ? '' : ' them')) + '">' +
+      (noPoint ? 'Is deal par kisi ko point nahi mila' : (teamName(wt) + ' — ' + (G.roundKot ? 'KOT (' : (G.resolveKind === 'chakkaAccepted' ? 'CHAKKA (' : 'JEET (')) + G.roundGain + ' point' + (G.roundGain > 1 ? 's' : '') + ')')) +
+    '</div>' +
+    (G.resolveKind === 'chakkaAccepted'
+      ? '<div class="note" style="text-align:center;margin:10px 0">Deal khelne se pehle hi khatam ho gayi — <b>CHAKKA</b> maan liya gaya.</div>'
+      : '<div class="score-big">' + G.tricks[0] + ' <span>—</span> ' + G.tricks[1] + '</div>') +
+    '<p class="sub">' + outcomeText() +
+      (G.roundLastTake ? '<br>Aakhri hath ne ' + G.roundLastTake + ' baaziyan utha lin.' : '') +
+    '</p>' +
+    (noPoint || G.resolveKind === 'chakkaAccepted' ? '' :
+    '<div class="note" style="text-align:center">' +
+      '<span style="color:#a9c0b0;font-size:10px;letter-spacing:.14em">HAARNEWALI TEAM</span><br>' +
+      '<b style="font-size:15px;color:' + (G.roundKot ? '#e7c568' : '#9fd4bb') + '">' + teamName(lt) + ' — ' + (G.roundKot ? 'KOT HO GAYI' : 'PEACE') + '</b>' +
+    '</div>') +
+    courtsRow() +
+    '<div class="note">' + (G.roundFailCaller != null
+      ? (retained
+          ? 'Challenge nakam — magar <b>' + esc(G.names[G.roundFailCaller]) + '</b> ki team ne <b>7+ hath</b> utaaye, is liye hakim wahi: <b>' + esc(G.names[G.hakim]) + '</b>.'
+          : '<b>' + esc(G.names[G.roundFailCaller]) + '</b> ki team ke <b>7 se kam</b> hath — challenge nakam. Agla deal <b>' + esc(G.names[G.nextHakim]) + '</b> baantega (rang wahi banayega).')
+      : noPoint
+      ? 'Agla deal phir <b>' + esc(G.names[G.nextHakim]) + '</b> hi baantega — hakim wahi raha.'
+      : G.roundForced
+      ? 'Agla deal phir <b>' + esc(G.names[G.nextHakim]) + '</b> ko milega — jis ne Rang chuna tha.'
+      : retained
+      ? 'Hakim <b>' + esc(G.names[G.hakim]) + '</b> ki team jeet gayi — hakim wahi rahenge.'
+      : 'Hakim ki team haar gayi — ab naya Hakim: <b>' + esc(G.names[G.nextHakim]) + '</b>.') +
+    '</div>' +
+    '<button class="btn-primary" id="btnNext">Agla Deal ▶</button>'
+  );
+  const b = $('btnNext');
+  if (b) b.addEventListener('click', () => { sfx('click'); closeModal(); nextRound(); });
+  if (window.__CP_AUTO_HUMAN) later(30, () => { const x = $('btnNext'); if (x) x.click(); });
+}
+
+function openMatchModal(){
+  if (!G) return;
+  const wt = G.matchWinner;
+  const mine = wt === teamOf(G.humanSeat);
+  openOverlay(
+    '<div class="result-head">' + TROPHY_SVG + ' ' + (mine ? 'Mubarak Ho!' : 'Match Khatam') + '</div>' +
+    '<div class="result-team' + (mine ? '' : ' them') + '">' + teamName(wt) + ' ne jeet liya!</div>' +
+    '<p class="sub">' + (mine ? 'Aap ki team ne 7 points poore kar liye — match winner!' : 'Doosri team ne 7 points poore kar liye — agli baar dekhte hain!') + '</p>' +
+    courtsRow() +
+    ((typeof netOnline === 'function' && netOnline())
+      ? '<p class="hint" style="text-align:center;margin:12px 0 0">Match khatam — naye khel ke liye naya room banayein.</p>'
+      : '<div class="modal-actions">' +
+        '<button class="btn-primary" id="btnRematch">Naya Match</button>' +
+        '<button class="btn-ghost" id="btnSetup">Naya Setup</button>' +
+      '</div>')
+  );
+  if (mine) confetti();
+  sfx('court');
+  const rb = $('btnRematch');
+  if (rb) rb.addEventListener('click', () => {
+    sfx('click');
+    if (typeof netAct === 'function' && netAct({ t: 'rematch' })) return;
+    startMatch(setup);
+  });
+  const sb = $('btnSetup');
+  if (sb) sb.addEventListener('click', () => {
+    sfx('click');
+    if (typeof netOnline === 'function' && netOnline()){ toast('Online me room dobara banayein'); return; }
+    draft.names = setup.names.slice(); draft.humanSeat = setup.humanSeat; draft.streakMode = setup.streakMode; openStartModal();
+  });
+  if (window.__CP_AUTO_HUMAN && !window.__CP_NO_AUTOREMATCH) later(30, () => { const x = $('btnRematch'); if (x) x.click(); });
+}
+
+/* ---------- KOT / PEACE calls ---------- */
+function opponentSeats(){
+  return [(G.humanSeat + 1) % 4, (G.humanSeat + 3) % 4];
+}
+function canCallNow(){
+  // ek deal me sirf ek hi challenge (KOT ya PEACE) — dobara buttons band rahenge
+  return G && G.phase === 'playing' && !G.paused && !G.matchOver && !G.kotCall && !G.peaceCall;
+}
+
+function responderPanelHTML(){
+  // faisla MAQABIL team ka — unka khowasha + deny par patte SIRF UNHE (caller ko sirf faisla)
+  const opp = teamName(1 - teamOf(G.humanSeat));
+  return '<div class="khowasha" id="responderBox">' +
+    '<div class="khowasha-title">MAQABIL TEAM KA FAISLA</div>' +
+    '<div class="khowasha-partner"><span class="kp-name">' + esc(opp) + '</span> khud decide kar rahe hain&hellip;</div>' +
+    '<div class="khowasha-partner" id="respDecision">' +
+      '<span class="kp-name">Unka faisla</span><span class="kp-mark">&#8230;</span>' +
+    '</div>' +
+  '</div>';
+}
+function runAiResponse(kind){
+  // maqabil team KHUD: unke khowasha votes -> mapping (dono ghalat -> Han | dono sahi -> Nahi)
+  // 1-1 split -> mazbooti: mazboot haath -> challenge (Nahi), kamzor -> maan lo (Han)
+  const g = GEN;
+  const seats = opponentSeats();
+  const votes = [null, null];
+  const setMark = (i, v) => {
+    votes[i] = v;
+    // unka khowasha UNHE hi — caller ke screen par koi mark nahi
+    G.khowasha = votes[0]; G.khowashaPartner = votes[1];
+  };
+  const decide = () => {
+    let yes;
+    if (votes[0] && votes[1] && votes[0] === votes[1]) yes = votes[0] === 'ghalat';
+    else yes = (handStrength(seats[0]) + handStrength(seats[1])) < 18;   // 1-1: maqabil khud
+    const label = kind === 'peace' ? (yes ? 'Han PEACE' : 'PEACE Nahi Hai') : (yes ? 'Han KOT' : 'KOT Nahi Hai');
+    const d = $('respDecision');
+    if (d){
+      const mk = d.querySelector('.kp-mark');
+      mk.className = 'kp-mark ' + (yes ? 'sahi' : 'ghalat');
+      mk.textContent = '"' + label + '"';
+    }
+    toast(teamName(1 - teamOf(G.humanSeat)) + ' ka faisla — ' + label);
+    sfx('click');
+    setTimeout(() => {
+      if (g !== GEN || !G) return;
+      if (kind === 'peace'){ if (yes) peaceAccepted(); else peaceDenied(); }
+      else { if (yes) kotAccepted(); else kotDenied(); }
+    }, Math.max(60, 1200 * SPEED));
+  };
+  setTimeout(() => { if (g !== GEN || !G) return; setMark(0, aiKhowashaVote(seats[0])); }, Math.max(40, 550 * SPEED));
+  setTimeout(() => { if (g !== GEN || !G) return; setMark(1, aiKhowashaVote(seats[1])); decide(); }, Math.max(90, 1150 * SPEED));
+}
+function teamStrength(team){ return handStrength(team) + handStrength(team + 2); }
+
+function openCallResponseModal(kind, callerTeam){
+  // JAWAB aap + aapke saathi ka — khowasha + Han/Nahi (chakka jaisa hi pattern)
+  G.khowasha = null;
+  G.khowashaPartner = (typeof netOnline === 'function' && netOnline()) ? (G.khowashaPartner || null) : aiKhowashaVote();
+  G.khowashaFor = kind;
+  const yesLbl = kind === 'peace' ? 'Han PEACE' : 'Han KOT';
+  const noLbl = kind === 'peace' ? 'PEACE Nahi Hai' : 'KOT Nahi Hai';
+  const yesId = kind === 'peace' ? 'btnPeaceYes' : 'btnKotYes';
+  const noId = kind === 'peace' ? 'btnPeaceNo' : 'btnKotNo';
+  if (window.__CP_AUTO_HUMAN){
+    const g = GEN;
+    setTimeout(() => {
+      if (g !== GEN || !G) return;
+      const yes = Math.random() < 0.5;
+      if (kind === 'peace'){ if (yes) peaceAccepted(); else peaceDenied(); }
+      else { if (yes) kotAccepted(); else kotDenied(); }
+    }, Math.max(30, 300 * SPEED));
+    return;
+  }
+  openOverlay(
+    '<div class="modal-head">' + (kind === 'peace' ? 'PEACE!' : 'KOT!') + '</div>' +
+    '<p class="sub">Maqabil team <b>' + teamName(callerTeam) + '</b> ne <b>' + (kind === 'peace' ? 'PEACE' : 'KOT') + '</b> kaha he.<br>Ab <b>jawab aap aur aapke saathi ka</b> &mdash; game yahin <b>freez</b> he.</p>' +
+    '<div class="note" style="text-align:center">Aap ka jawab?</div>' +
+    '<div class="modal-actions">' +
+      '<button class="btn-primary" id="' + yesId + '">' + yesLbl + '</button>' +
+      '<button class="btn-ghost" id="' + noId + '">' + noLbl + '</button>' +
+    '</div>' +
+    khowashaHTML()
+  );
+  $(yesId).addEventListener('click', () => {
+    sfx('click');
+    if (typeof netAct === 'function' && netAct({ t: 'answer', what: kind, v: true })) return;
+    if (kind === 'peace') peaceAccepted(); else kotAccepted();
+  });
+  $(noId).addEventListener('click', () => {
+    sfx('click');
+    if (typeof netAct === 'function' && netAct({ t: 'answer', what: kind, v: false })) return;
+    if (kind === 'peace') peaceDenied(); else kotDenied();
+  });
+}
+
+function aiMaybeCall(seat){
+  // AI khilaf-walon ka challenge: zabardast haath -> KOT; insaan team kamzor -> PEACE
+  if (!G || window.__CP_AUTO_HUMAN) return false;
+  if (seat == null || seat === G.humanSeat || !canCallNow()) return false;
+  const aiTeam = teamOf(seat), huTeam = 1 - aiTeam;
+  const aiS = teamStrength(aiTeam), huS = teamStrength(huTeam);
+  if (G.tricks[huTeam] === 0 && aiS >= 34){ callKot(aiTeam, seat); return true; }
+  if (aiS >= 23 && huS <= 18 && (G.center.length || 0) >= 1){ callPeace(aiTeam, seat); return true; }
+  return false;
+}
+
+function callKot(byTeam, bySeat){
+  if (byTeam == null && typeof netAct === 'function' && netAct({ t: 'call', what: 'kot' })) return;
+  if (!canCallNow()) return;
+  const callerTeam = (byTeam == null) ? teamOf(G.humanSeat) : byTeam;
+  G.callTeam = callerTeam;
+  G.callSeat = (bySeat != null) ? bySeat : (callerTeam === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0]);
+  G.paused = true;
+  sfx('trump');
+  render();
+  if (typeof netUi === 'function') netUi('callUI', { kind: 'kot', callerTeam });
+  openCallUIFor('kot', callerTeam);
+}
+
+function openCallUIFor(kind, callerTeam){
+  // har screen par apne hisab se — caller ko "intezar", jawab dene walon ko khowasha + buttons
+  const isPeace = kind === 'peace';
+  const cSeat = (G.callSeat != null) ? G.callSeat : null;
+  const callerLabel = (cSeat != null && cSeat !== G.humanSeat) ? esc(G.names[cSeat]) + ' (aapka saathi)' : 'Aap';
+  if (callerTeam !== teamOf(G.humanSeat)){
+    openCallResponseModal(kind, callerTeam);       // jawab HUM (aap + saathi) denge
+    return;
+  }
+  const opp = 1 - callerTeam;
+  G.khowasha = null; G.khowashaPartner = null; G.khowashaFor = kind;
+  const body = isPeace
+    ? callerLabel + ' <b>PEACE</b> maang raha he.<br>Maqabil team <b>' + teamName(opp) + '</b> <b>khud</b> faisla kar rahi he &mdash; <b>Han PEACE</b> ya <b>PEACE Nahi Hai</b>.<br>Game freez he.'
+    : callerLabel + ' ne <b>KOT</b> kaha he.<br>Maqabil team <b>' + teamName(opp) + '</b> <b>khud</b> faisla kar rahi he &mdash; <b>Han KOT</b> ya <b>KOT Nahi Hai</b>.<br>Game yahin <b>freez</b> ho gaya he.';
+  openOverlay(
+    '<div class="modal-head">' + (isPeace ? 'PEACE?' : 'KOT!') + '</div>' +
+    '<p class="sub">' + body + '</p>' +
+    responderPanelHTML()
+  );
+  if (!(typeof netOnline === 'function' && netOnline())) runAiResponse(kind);
+}
+
+function kotAccepted(){
+  // "Han KOT" — deal foran khatam, aur agli deal usi bande ko jis ne Rang chuna tha
+  if (typeof netUi === 'function') netUi('shadow', { fn: 'kotAccepted' });
+  closeModal();
+  if (!G) return;
+  const t = (G.callTeam == null) ? teamOf(G.humanSeat) : G.callTeam;
+  G.forcedWin = { team: t, kot: true, keepHakim: true };
+  G.paused = false;
+  G.callTeam = null;
+  render();
+  endRound();
+}
+
+function kotDenied(tOverride){
+  // "KOT Nahi Hai" — DENY karne wali team aapas me patte dikha leti he.
+  // Caller ko kabhi nahi: maqabil ne deny kiya -> unke patte UNHE aapas me (aap ko kuch nahi);
+  // aap ne deny kiya -> saathi ke patte aap ko, aap ke patte saathi ko (sirf 10 second).
+  if (!G) return;
+  const t = (tOverride != null) ? tOverride : ((G.callTeam == null) ? teamOf(G.humanSeat) : G.callTeam);
+  const humanDenied = teamOf(G.humanSeat) !== t;
+  G.kotCall = { team: t, caller: (G.callSeat != null ? G.callSeat : (t === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0])), at: G.tricks.slice(), khowasha: G.khowasha || null, khowashaPartner: G.khowashaPartner || null };
+  G.callTeam = null; G.callSeat = null;
+  G.reveal = [];
+  G.revealTeam = 1 - t;              // deny karne wali team (online: unke views me saathi ka haath)
+  render();
+  if (typeof netUi === 'function') netUi('shadow', { fn: 'kotDenied', args: [t] });
+  if (!humanDenied){
+    // CASE A: maqabil ne deny kiya — unke patte unhe hi aapas me dikhe (caller ko kuch nahi)
+    closeModal();
+    if (typeof netOnline === 'function' && netOnline()){
+      G.paused = true;               // deniers ka 10s reveal mukammal hone do
+      toast('Unhone aapas me patte dikha liye (sirf unke liye) — 10 second…');
+      render();
+      return;
+    }
+    G.paused = false;
+    toast('Unhone aapas me patte dikha liye (sirf unke liye). Khel jari he.');
+    render();
+    drive();
+    return;
+  }
+  // CASE B: aap ne deny kiya — team ka aapas-me hand share (saathi ke patte aap ko)
+  const st = partnerSeatOf(G.humanSeat);
+  const rows =
+    '<div class="reveal-hand">' +
+      '<div class="rv-name">' + esc(G.names[st]) + ' \u00b7 Saathi</div>' +
+      '<div class="hand">' +
+        sortHand(G.hands[st] || [], G.trump).map(c => cardHTML(c)).join('') +
+      '</div>' +
+    '</div>';
+  openOverlay(
+    '<div class="modal-head">KOT Nahi Hai</div>' +
+    '<p class="sub">Aap aur saathi ne kaha &mdash; <b>KOT nahi he</b>.<br>Aap dono ne <b>aapas me patte dikha liye</b> (aap ke patte bhi saathi ko) &mdash; <b>sirf 10 second</b>.<br>Time khatam hote hi (ya OK par) sab ke apne hi patte wapas.</p>' +
+    rows +
+    '<div class="modal-actions" style="margin-top:14px">' +
+      '<button class="btn-primary" id="btnKotOk">OK — Dekh Liya (10s)</button>' +
+    '</div>',
+    'w-reveal'
+  );
+  // sirf 10 second — phir khud OK dab jata he
+  const gRev = GEN;
+  const endAt = Date.now() + Math.max(250, 10000 * SPEED);
+  const closeReveal = () => {
+    sfx('click');
+    closeModal();
+    if (typeof netIsClient === 'function' && netIsClient()){
+      netSend({ t: 'act', m: { t: 'revealDone' } });
+      return;
+    }
+    if (typeof netUi === 'function') netUi('revealClose');
+    if (G){ G.reveal = []; G.revealTeam = null; G.paused = false; render(); drive(); }
+  };
+  const tick = setInterval(() => {
+    if (gRev !== GEN){ clearInterval(tick); return; }
+    const b = $('btnKotOk');
+    if (!b){ clearInterval(tick); return; }
+    const left = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+    b.textContent = 'OK \u2014 Dekh Liya (' + left + 's)';
+    if (Date.now() >= endAt){ clearInterval(tick); closeReveal(); }
+  }, 250);
+  $('btnKotOk').addEventListener('click', () => {
+    clearInterval(tick);
+    closeReveal();
+  });
+}
+
+function peaceDenied(){
+  if (typeof netUi === 'function') netUi('shadow', { fn: 'peaceDenied' });
+  if (!G) return;
+  const t = (G.callTeam == null) ? teamOf(G.humanSeat) : G.callTeam;
+  const humanDenied = teamOf(G.humanSeat) !== t;
+  G.peaceCall = { team: t, caller: (G.callSeat != null ? G.callSeat : (t === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0])), at: G.tricks.slice(), khowasha: G.khowasha || null, khowashaPartner: G.khowashaPartner || null };
+  G.callTeam = null; G.callSeat = null;
+  closeModal();
+  G.paused = false;
+  toast(humanDenied ? 'Aap aur saathi ne kaha — PEACE nahi he. Khel jari he.' : 'Maqabil team ne kaha — PEACE nahi he. Khel jari he.');
+  render();
+  drive();
+}
+function callPeace(byTeam, bySeat){
+  if (byTeam == null && typeof netAct === 'function' && netAct({ t: 'call', what: 'peace' })) return;
+  if (!canCallNow()) return;
+  const callerTeam = (byTeam == null) ? teamOf(G.humanSeat) : byTeam;
+  G.callTeam = callerTeam;
+  G.callSeat = (bySeat != null) ? bySeat : (callerTeam === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0]);
+  G.paused = true;
+  sfx('click');
+  render();
+  if (typeof netUi === 'function') netUi('callUI', { kind: 'peace', callerTeam });
+  openCallUIFor('peace', callerTeam);
+}
+
+function peaceAccepted(){
+  if (typeof netUi === 'function') netUi('shadow', { fn: 'peaceAccepted' });
+  if (!G) return;
+  closeModal();
+  const t = (G.callTeam == null) ? teamOf(G.humanSeat) : G.callTeam;
+  G.paused = false;
+  G.roundPeace = true;
+  G.peaceWinner = (G.tricks[0] === G.tricks[1]) ? (1 - t)
+                : (G.tricks[0] > G.tricks[1] ? 0 : 1);
+  G.callTeam = null;
+  endRound();
+}
+
+/* ---------- rules ---------- */
+function openRulesModal(returnFn){
+  if (G) G.paused = true;
+  render();
+  openOverlay(
+    '<div class="modal-head">Quetta Court Piece — Rules</div>' +
+    '<ol class="rules-list">' +
+      '<li><b>4 IDs · 2 Teams:</b> ID 1 &amp; 3 ek team, ID 2 &amp; 4 doosri. Partner aamne saamne. Chal clockwise hoti hai.</li>' +
+      '<li><b>Hakim:</b> patte teen haath me — <b>5</b>, phir <b>4</b>, phir <b>4</b>. Pehla haath aate hi Hakim apne 5 patte dekh kar <b>Hokm (trump)</b> chunta hai, phir baqi do haath baantte hain. Jab tak Hokm na chune, baqi khelari apne patte nahi dekhte.</li>' +
+      '<li><b>Chal:</b> jis rang ka patta chala ho usi rang ka dena <b>lazmi</b>; na ho to koi bhi (Hokm bhi). Sab se bara Hokm jeetta hai, warna chale hue rang ka sab se bara patta.</li>' +
+      '<li><b>Hath count nahi hote — pehle jama hote hain:</b> jo baazi jeetein, uske patte table ke beech <b>centre pile</b> me pare rehte hain. 1 ya 2 baaziyan jeetne se kuch nahi milta.</li>' +
+      '<li><b>Lagataar 3 hath:</b> sirf <b>usi ek khelari</b> ka count hota he — dono partners ka mila kar nahi. Wohi khelari jab <b>3 lagataar</b> baaziyan jeete, to poora centre pile uska (aur uski team ka). Agar beech me us ke <b>sathi ne</b> koi baazi jeet li (chahe upar bara patta hi phenk de) to lagataar count <b>phir se shuru</b>. Agar 2 jeet kar teesra haar gaya to patte wahin pare rehte hain — kisi ke nahi.</li>' +
+      '<li><b>Phir do-do hath ka game:</b> ek dafa collection ho jaye to us deal ke baqi hisse me sirf <b>2 lagataar</b> hath kaafi hain.</li>' +
+      '<li><b>Aakhri hath:</b> 13th (aakhri) baazi jeetne wala baqi saara centre pile utha leta hai.</li>' +
+      '<li><b>Deal ka nateeja:</b> 7 se ziyada hath wali team jeeti = <b>1 point</b> aur doosri team <b>PEACE</b>. Saare 13 hath = <b>KOT</b> = <b>2 points</b>.</li>' +
+      '<li><b>Hakim ki team</b> jeete to Hakim wahi; hare to Hakimiyat doosri team ko.</li>' +
+      '<li><b>Match:</b> jo pehle <b>7 points</b> poore kare, wohi match winner.</li>' +
+      '<li><b>CHAKKA:</b> agar Hakim ke pehle 5 patton me <b>rang ka A</b> ho, to deal rukti he aur usay <b>CHAKKA</b> batan milta he.<br>• <b>“Han Chakka He”</b> (doosri team) → chakka wali team ko <b>2 points</b> aur deal dobara shuru.<br>• <b>“Chakka Nahi He”</b> → khel shuru. Agar phir bhi KOT ho gaya → chakka wali team ko <b>3 points</b>.<br>• Aur agar rang banane wali (chakka) team hi KOT ho gayi → doosri team ko <b>4 points</b>.</li>' +
+      '<li><b>KOT button (challenge):</b> khel ke doran dabaen — game freez ho jata he. Jis team ne call kiya, <b>options uski maqabil team ko</b> &mdash; caller ko kabhi nahi; agar <b>maqabil team</b> KOT kahe to jawab <b>aap + saathi</b> dete hain. Faisla <b>maqabil team ka</b> hota he — woh <b>khud</b> decide karte hain (unka khowasha + unka faisla + deny par patte bhi <b>sirf unhe</b> dikhte hain &mdash; aap ko sirf faisla pata chalta he).<br>• <b>“Han KOT”</b> — deal foran khatam, kot bolne wali team ko <b>1 point</b>, aur agli deal usi ko jis ne Rang chuna tha.<br>• <b>“KOT Nahi Hai”</b> — <b>deny karne wali team</b> aapas me patte dikha leti he (sirf unhe): maqabil ne deny kiya to unke patte <b>unhe hi</b> aapas me — aap ko kuch nahi; aap ne deny kiya to <b>saathi ke patte aap ko</b> (aap ke patte saathi ko) — <b>10 second</b>, countdown <b>OK</b>, phir khud band. Deal ke aakhir me:<br>&nbsp;&nbsp;– agar KOT sabit ho jaye (unke 0 hath) → aap ko <b>2 points</b>.<br>&nbsp;&nbsp;– agar KOT sabit na ho aur unhon ne hath utaye (3+) → unhe <b>1 point</b>.<br>• <b>Bina KOT call ke</b> saare 13 hath = sirf <b>1 point</b>.</li>' +
+      '<li><b>PEACE button (challenge):</b> jis team ne call kiya, faisla <b>uski maqabil team ka</b> (agar maqabil team PEACE kahe to jawab aap + saathi dete hain) — woh khud decide karte hain (unka khowasha + unka faisla).<br>• <b>“Han PEACE”</b> — deal wahin khatam, magar <b>kisi ko point nahi</b> milta.<br>• <b>“PEACE Nahi Hai”</b> — khel jari rehta he. Deal ke aakhir me:<br>&nbsp;&nbsp;– unke <b>7 se kam hath</b> → <b>1 point</b> PEACE bolne wali team ko.<br>&nbsp;&nbsp;– unke <b>7 se ziyada hath</b> → unhe <b>1 point</b>.<br>&nbsp;&nbsp;– agar <b>rang banane wali team</b> ne PEACE kaha aur wo khud <b>KOT</b> ho gayi → doosri team ko <b>3 points</b>.<br>&nbsp;&nbsp;– agar rang banane wali team ne “PEACE Nahi Hai” kaha aur unhone <b>poore 13 hath</b> uthaaye → rang team ko <b>2 points</b>.</li>' +
+    '<li><b>Khowasha (andaza):</b> khowasha sirf <b>jawab dene wali team</b> ko dikhta he — jab aap/sathi call karein to unka khowasha <b>unhe hi</b> (aap ko nahi); jab wo call karein to aap + saathi ke khowasha (✓ Sahi / ✗ Ghalat) lagte hain — saathi ka naam aur uska nishan wahin dikhta he.<br>• Dono <b>sahi</b> → <b>“… Nahi”</b> wala button khud dab jata he.<br>• Dono <b>ghalat</b> → <b>“Han …”</b> wala button khud dab jata he.<br>• Ek sahi, ek ghalat → koi auto nahi — aap khud button dabayein.</li>' +
+    '<li><b>Slam (patta zameen par):</b> PEACE ke sath wale <b>hath-icon</b> par click kar ke patta chunein — slam sirf tab jab aapka patta <b>ye hath pakka jeet raha ho</b>: maidan ke tamam patton se bara ho (chota patta bhi chalta he — sirf in 4 me sabse bara ho), maidan me koi <b>trump/rang</b> aapke patte ko na hara raha ho, aur agar aapke baad koi aur khelega to <b>kisi ke paas</b> koi aisa patta na ho jo aapke patte ko <b>khel kar</b> hara de (suit follow ki majboori me phansa patta — jo wo khel hi nahi sakta — shamil nahi) (jab aap hath ka <b>aakhri</b> patta phenk rahe hon to sirf maidan se bara hona kafi he). Kisi aur ke rang ke upar bagair-trump patta — chahe sabse bara hi kyun na ho — slam nahi karta (wo hath nahi utha sakta). Slam par patta <b>zor se</b> girta he: awaz, matti ki phuhar aur screen ki halki hulchul.</li>' +
+    '</ol>' +
+    '<p class="hint">Tip: lagataar hath banao — 1-2 hath ka koi faida nahi, aur pile 3 (ya 2) lagataar par hi uthta hai. Aakhri hath sab se qeemti hai!</p>' +
+    '<button class="btn-primary" id="btnCloseRules">Samajh Gaya</button>'
+  );
+  $('btnCloseRules').addEventListener('click', () => {
+    sfx('click');
+    closeModal();
+    if (G) G.paused = false;
+    if (returnFn) returnFn();
+    else render();
+  });
+}
+
+/* ---------- confetti ---------- */
+function confetti(){
+  const colors = ['#e7c568','#f3e3ac','#ffffff','#9fd4bb','#b3261e','#e05a4e'];
+  for (let i = 0; i < 46; i++){
+    const d = document.createElement('div');
+    d.className = 'confetti';
+    d.style.left = Math.random() * 100 + 'vw';
+    d.style.background = colors[Math.floor(Math.random() * colors.length)];
+    const dur = 2.2 + Math.random() * 2;
+    d.style.animationDuration = dur + 's';
+    d.style.animationDelay = (Math.random() * 0.7) + 's';
+    d.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+    d.style.opacity = 0.9;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), (dur + 1) * 1000);
+  }
+}
+
+/* ============================================================
+   ONLINE MULTIPLAYER — host-authoritative + room relay
+   (host = room banane wala; server sirf messages aage bhejta he)
+   ============================================================ */
+const NET = { on: false, host: false, ws: null, seat: null, room: null, names: [null, null, null, null], url: '', hb: null, tries: 0, left: false };
+
+function netOnline(){ return NET.on; }
+function netIsHost(){ return NET.on && NET.host; }
+function netIsClient(){ return NET.on && !NET.host; }
+
+function netSend(obj){
+  if (!NET.ws || NET.ws.readyState !== 1) return;
+  try { NET.ws.send(JSON.stringify(obj)); } catch(e){}
+}
+function netAct(a){
+  if (!netIsClient()) return false;
+  netSend({ t: 'act', m: a });
+  return true;
+}
+function netUi(name, data){
+  if (!netIsHost()) return;
+  netSend({ t: 'msg', m: { t: 'ui', name, data: (data == null ? null : data) } });
+}
+
+/* host ka G -> har khiladi ke liye sirf APNA haath, baaki chhupe */
+function viewFor(seat){
+  const v = {};
+  for (const k in G){
+    if (k === 'hands' || k === 'deck' || k === 'schedule') continue;
+    v[k] = G[k];
+  }
+  v.hands = G.hands.map((h, i) => {
+    if (i === seat) return h.slice();
+    if (G.revealTeam != null && teamOf(seat) === G.revealTeam && i === partnerSeatOf(seat)) return h.slice();
+    return h.map(() => ({ hidden: true }));
+  });
+  v.deck = [];
+  v.humanSeat = seat;
+  const votes = G.votes || {};
+  v.khowasha = (votes[seat] != null) ? votes[seat] : null;
+  v.khowashaPartner = (votes[partnerSeatOf(seat)] != null) ? votes[partnerSeatOf(seat)] : null;
+  return v;
+}
+function netBroadcast(){
+  if (!netIsHost() || !G) return;
+  for (let s = 0; s < 4; s++){
+    if (s === G.humanSeat) continue;
+    netSend({ t: 'msg', m: { t: 'st', to: s, view: viewFor(s) } });
+  }
+}
+function khowashaRefresh(){
+  const wrap = $('khowashaPartner');
+  if (wrap){
+    const old = wrap.querySelector('.kp-mark');
+    if (old) old.outerHTML = khowashaMarkHTML(G.khowashaPartner, 'kp-live');
+  }
+  evaluateKhowasha();
+}
+function netApplyView(view){
+  if (!view) return;
+  G = view;
+  render();
+  khowashaRefresh();
+}
+function netShadow(fn, args){
+  const map = { kotAccepted: kotAccepted, kotDenied: kotDenied, peaceAccepted: peaceAccepted, peaceDenied: peaceDenied, resolveChakka: resolveChakka };
+  const f = map[fn];
+  if (f) f.apply(null, args || []);
+}
+function netUiApply(name, data){
+  if (!G) return;
+  switch (name){
+    case 'askTrump':
+      if (G.phase === 'trump' && G.hakim === G.humanSeat && !G.trump) openTrumpModal();
+      break;
+    case 'chakkaOffer':
+      if (G.hakim === G.humanSeat && !G.chakkaCall) openChakkaOfferModal();
+      break;
+    case 'chakkaResponse':
+      if (G.chakkaCall && teamOf(G.humanSeat) !== G.chakkaCall.team) openChakkaResponseModal();
+      break;
+    case 'callUI':
+      if (data) openCallUIFor(data.kind, data.callerTeam);
+      break;
+    case 'shadow':
+      if (data) netShadow(data.fn, data.args);
+      break;
+    case 'roundModal':
+      if ((data && data.matchOver) || G.matchOver) openMatchModal(data ? data.retained : false);
+      else openRoundModal(data ? data.retained : false);
+      break;
+    case 'revealClose':
+      closeModal();
+      break;
+    case 'slamFx':
+      if (data && data.seat !== G.humanSeat) slamFxAt(data.seat);
+      break;
+  }
+}
+
+/* host par: khiladi ka action mila — engine me lagao */
+function netOnAct(m, from){
+  if (!netIsHost() || !G || !m) return;
+  const seat = (from != null) ? from : G.humanSeat;
+  switch (m.t){
+    case 'play': {
+      const c = (G.hands[seat] || []).find(x => x.id === m.id);
+      if (!c) return;
+      if (m.slam){
+        slamFxAt(seat);
+        netUi('slamFx', { seat });
+      }
+      doPlay(seat, c);
+      break;
+    }
+    case 'trump': applyTrump(m.suit); break;
+    case 'chakkaPress': pressChakka(); break;
+    case 'chakkaSkip': continueDealAfterTrump(); break;
+    case 'chakkaAnswer': resolveChakka(!!m.v); break;
+    case 'call':
+      if (m.what === 'peace') callPeace(teamOf(seat), seat);
+      else callKot(teamOf(seat), seat);
+      break;
+    case 'answer':
+      if (m.what === 'peace'){ if (m.v) peaceAccepted(); else peaceDenied(); }
+      else { if (m.v) kotAccepted(); else kotDenied(); }
+      break;
+    case 'khowasha':
+      if (!G.votes) G.votes = {};
+      G.votes[seat] = (m.v === 'sahi' || m.v === 'ghalat') ? m.v : null;
+      if (seat === partnerSeatOf(G.humanSeat)) G.khowashaPartner = G.votes[seat];
+      render();
+      khowashaRefresh();
+      break;
+    case 'next': nextRound(); break;
+    case 'rematch': startMatch(setup); break;
+    case 'revealDone':
+      netUi('revealClose');
+      G.reveal = []; G.revealTeam = null; G.paused = false; render(); drive();
+      break;
+  }
+}
+
+/* ---------- server connection + lobby ---------- */
+function netWsUrl(){
+  const inp = $('netUrl');
+  let u = (inp && inp.value.trim()) || NET.url || '';
+  if (!u && (location.protocol === 'http:' || location.protocol === 'https:')){
+    u = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  }
+  return u;
+}
+function netConnect(url, onOpen){
+  if (!url){ toast('Server URL daalein (README-ONLINE.md dekhein)'); return; }
+  NET.url = url;
+  try{
+    const ws = new WebSocket(url);
+    NET.ws = ws;
+    ws.onopen = () => {
+      NET.tries = 0;
+      if (NET.hb){ clearInterval(NET.hb); NET.hb = null; }
+      NET.hb = setInterval(() => netSend({ t: 'ping' }), 25000);   // connection zinda
+      if (onOpen) onOpen();
+    };
+    ws.onmessage = (e) => {
+      let msg;
+      try { msg = JSON.parse(e.data); } catch(err){ return; }
+      netOnMessage(msg);
+    };
+    ws.onclose = () => {
+      if (NET.hb){ clearInterval(NET.hb); NET.hb = null; }
+      if (NET.ws === ws) NET.ws = null;
+      if (NET.left) return;
+      if (NET.room != null){
+        // net toota — khud wapas judne ki koshish (usi seat par)
+        NET.tries = (NET.tries || 0) + 1;
+        if (NET.tries <= 5){
+          toast('Connection toota — dobara jud rahe hain (' + NET.tries + '/5)…');
+          setTimeout(() => {
+            if (NET.left || !NET.room) return;
+            netConnect(NET.url, () => netSend({ t: 'rejoin', room: NET.room, seat: NET.seat, name: (NET.names[NET.seat] || 'Khiladi') }));
+          }, Math.min(8000, 1200 * NET.tries));
+        } else {
+          toast('Server se jud nahi sake — page refresh kar ke dobara room me juden');
+          NET.on = false;
+        }
+      } else {
+        NET.on = false;
+      }
+    };
+  } catch(err){ toast('Server se jud nahi sake'); }
+}
+function netOnMessage(msg){
+  if (!msg) return;
+  switch (msg.t){
+    case 'welcome':
+      NET.seat = msg.seat; NET.room = msg.room; NET.names = msg.names || NET.names; NET.host = (msg.seat === 0);
+      if (!NET.on) openLobby();
+      break;
+    case 'lobby':
+      NET.names = msg.names || NET.names;
+      if (!NET.on) openLobby();
+      break;
+    case 'go':
+      NET.on = true; NET.host = (NET.seat === 0);
+      closeModal();
+      if (NET.host){
+        const names = (msg.names || NET.names).map((x, i) => x || ('Player ' + (i + 1)));
+        startMatch({ names, humanSeat: NET.seat, target: 7, streakMode: 'player' });
+      } else {
+        toast('Khel shuru ho raha he…');
+      }
+      break;
+    case 'st': netApplyView(msg.view); break;
+    case 'ui': netUiApply(msg.name, msg.data); break;
+    case 'act': netOnAct(msg.m, msg.from); break;
+    case 'err': toast(msg.msg || 'Koi masla ho gaya'); break;
+    case 'drop':
+      toast((NET.names[msg.seat] || 'Ek khiladi') + ' khel chhod kar gaya');
+      break;
+    case 'roomgone':
+      toast('Room band — host chala gaya');
+      NET.on = false;
+      break;
+  }
+}
+function openOnlinePanel(){
+  GEN++;
+  if (G) G.paused = true;
+  closeModal();
+  openOverlay(
+    '<div class="modal-head">Doston ke sath Online</div>' +
+    '<p class="sub">Ek banda <b>room banayega</b> (host), baaki <b>code</b> se judenge.<br>Sab ke sab asli khiladi — koi AI nahi.</p>' +
+    ((location.protocol === 'http:' || location.protocol === 'https:')
+      ? ''
+      : '<label class="id-field"><span>Server URL</span><input id="netUrl" autocomplete="off" spellcheck="false" placeholder="wss://aapka-server.com"></label>') +
+    '<div class="modal-actions" style="flex-direction:column;gap:9px">' +
+      '<button class="btn-primary" id="btnNetCreate">Naya Room Banayein (main host)</button>' +
+      '<div style="display:flex;gap:8px;width:100%">' +
+        '<input id="netCode" maxlength="4" autocomplete="off" spellcheck="false" placeholder="CODE" style="flex:1;text-transform:uppercase;letter-spacing:.3em;text-align:center">' +
+        '<button class="btn-primary" id="btnNetJoin">Room me Juden</button>' +
+      '</div>' +
+    '</div>' +
+    '<p class="hint">Link se kholein to Server URL khaali chhod dein. Host ko "Naya Room" banana he.</p>' +
+    '<button class="btn-ghost" id="btnNetBack">Wapis</button>'
+  );
+  const hm = (location.hash || '').match(/room=([A-Za-z0-9]{4})/i);
+  if (hm){
+    const inp = $('netCode');
+    if (inp) inp.value = hm[1].toUpperCase();
+    toast('Code bhar gaya — sirf naam likh ke "Room me Juden" dabayein!');
+    const nm = $('netName'); if (nm){ nm.focus(); nm.select && nm.select(); }
+  }
+  $('btnNetCreate').addEventListener('click', () => {
+    sfx('click');
+    const name = String((draft.names[0] || '').trim() || 'Khiladi');
+    netConnect(netWsUrl(), () => netSend({ t: 'create', name }));
+  });
+  $('btnNetJoin').addEventListener('click', () => {
+    sfx('click');
+    const name = String((draft.names[0] || '').trim() || 'Khiladi');
+    const code = ($('netCode').value || '').trim().toUpperCase();
+    if (!code){ toast('Room code daalein'); return; }
+    netConnect(netWsUrl(), () => netSend({ t: 'join', room: code, name }));
+  });
+  $('btnNetBack').addEventListener('click', () => { sfx('click'); openStartModal(); });
+}
+function openLobby(){
+  const seats = [0, 1, 2, 3].map(i =>
+    '<div class="khowasha-partner" style="justify-content:space-between">' +
+      '<span class="kp-name">ID ' + (i + 1) + ' · ' + esc(NET.names[i] || '— intezar —') + '</span>' +
+      (i === NET.seat ? '<span class="kp-mark sahi">AAP</span>' : (NET.names[i] ? '<span class="kp-mark sahi">✓</span>' : '<span class="kp-mark">…</span>')) +
+    '</div>'
+  ).join('');
+  const ready = NET.names.filter(Boolean).length;
+  openOverlay(
+    '<div class="modal-head">Room: <span class="gold" style="letter-spacing:.25em">' + esc(NET.room || '') + '</span></div>' +
+    '<p class="sub">Yeh code doston ko bhejein — wo <b>Room me Juden</b> se aayenge.<br>Khiladi: <b>' + ready + '/4</b></p>' +
+    seats +
+    (NET.host
+      ? '<div class="modal-actions"><button class="btn-primary" id="btnLobbyGo"' + (ready >= 4 ? '' : ' disabled style="opacity:.5"') + '>Khel Shuru Karein ♠</button></div>'
+      : '<p class="hint" style="text-align:center">Host ke shuru karne ka intezar…</p>') +
+    '<button class="btn-primary" id="btnLobbyShare" style="margin:8px 0">📋 Doston ka Link Copy Karein</button>' +
+    '<button class="btn-ghost" id="btnLobbyLeave">Room Chhodein</button>'
+  );
+  const sh = $('btnLobbyShare');
+  if (sh) sh.addEventListener('click', () => {
+    sfx('click');
+    const link = location.origin + location.pathname + '#room=' + (NET.room || '');
+    const show = () => window.prompt('Yeh link copy kar ke doston ko WhatsApp par bhejein:', link);
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(() => toast('Link copy ho gaya — doston ko bhej dein!')).catch(show);
+    } else show();
+  });
+  if (NET.host){
+    const go = $('btnLobbyGo');
+    if (go) go.addEventListener('click', () => {
+      if ((NET.names.filter(Boolean).length) < 4){ toast('4 khiladi chahiye'); return; }
+      sfx('click');
+      netSend({ t: 'go' });
+    });
+  }
+  const lv = $('btnLobbyLeave');
+  if (lv) lv.addEventListener('click', () => {
+    sfx('click');
+    NET.left = true;
+    netSend({ t: 'leave' });
+    try { if (NET.ws) NET.ws.close(); } catch(e){}
+    NET.on = false; NET.ws = null; NET.room = null; NET.seat = null;
+    openStartModal();
+  });
+}
+
+/* host ka har render -> sab ko naya view */
+const _netRenderBase = render;
+function refreshTableBtns(){
+  const on = (typeof netOnline === 'function') && netOnline();
+  const bR = $('btnRules'), bN = $('btnNew'), bE = $('btnExit');
+  if (bR) bR.style.display = (!G || on) ? 'none' : '';
+  if (bN) bN.style.display = 'none';
+  if (bE) bE.style.display = (!G || on) ? 'none' : '';
+}
+render = function(){
+  _netRenderBase();
+  try { refreshTableBtns(); } catch(e){}
+  netBroadcast();
+};
+
+/* ============================================================
+   WIRE UP
+   ============================================================ */
+function onNewMatch(){
+  sfx('click');
+  if (G) startMatch(setup);
+  else openStartModal();
+}
+
+function init(){
+  try{ soundOn = localStorage.getItem('cp_sound') !== '0'; } catch(e){}
+  updateSoundBtn();
+  $('btnRules').addEventListener('click', () => openRulesModal(null));
+  $('btnSound').addEventListener('click', toggleSound);
+  $('btnNew').addEventListener('click', onNewMatch);
+  $('btnExit').addEventListener('click', () => {
+    sfx('click');
+    GEN++;
+    G = null;
+    closeModal();
+    openStartModal();
+  });
+  document.addEventListener('pointerdown', initAudio);
+  document.addEventListener('click', e => {
+    if (!e.target || !e.target.closest || !G) return;
+    const k = e.target.closest('.khowasha-btn');
+    if (k){ sfx('click'); setKhowasha(k.dataset.khowasha); return; }
+    const sl = e.target.closest('[data-slam]');
+    if (sl){ sfx('click'); toggleSlam(); return; }
+    const b = e.target.closest('[data-call]');
+    if (!b) return;
+    if (b.dataset.call === 'kot') callKot();
+    else if (b.dataset.call === 'peace') callPeace();
+  });
+  openStartModal();
+  const hm0 = (location.hash || '').match(/room=([A-Za-z0-9]{4})/i);
+  if (hm0) toast('Aap ko room me bulaya gaya hai — naam likhein aur "Doston ke sath Online" dabayein!');
+}
+
+/* test / debug hooks */
+window.CP = {
+  get state(){ return G; },
+  stats,
+  startMatch,
+  nextRound,
+  applyTrump,
+  doPlay,
+  legalCards,
+  legalFromHand,
+  aiChoose,
+  setSpeed(v){ SPEED = v; },
+  setManual(v){ window.__CP_MANUAL = !!v; },
+  setAutoHuman(v){
+    window.__CP_AUTO_HUMAN = !!v;
+    if (window.__CP_AUTO_HUMAN && G && G.phase === 'playing' && G.turn === G.humanSeat && !G.busy && !G.paused) drive();
+  },
+  _beats: beats,
+  _bestOfTrick: bestOfTrick,
+  _needStreak: needStreak,
+  _callKot: callKot,
+  _kotAccepted: kotAccepted,
+  _kotDenied: kotDenied,
+  _peaceAccepted: peaceAccepted,
+  _peaceDenied: peaceDenied,
+  _aiMaybeCall: aiMaybeCall,
+  _setKhowasha: setKhowasha,
+  _setKhowashaPartner: setKhowashaPartner,
+  _evaluateKhowasha: evaluateKhowasha,
+  _canSlam: canSlam,
+  _armSlam(v){ slamArmed = !!v; render(); },
+  _isSlamArmed(){ return slamArmed; },
+  _callPeace: callPeace,
+  _sortHand: sortHand,
+  _pressChakka: pressChakka,
+  _resolveChakka: resolveChakka,
+  _continueDeal: continueDealAfterTrump,
+  _suitLayout: suitLayout,
+  _render: render,
+  _endRound: endRound,
+  _resolveTrick: resolveTrick
+};
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4cabaf97a309248',t:'MTc5MjM1OTkyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
