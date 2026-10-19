@@ -189,6 +189,7 @@
 
   /* ============ MODALS ============ */
   #modalRoot .overlay{position:fixed;inset:0;z-index:100;background:rgba(2,10,6,.74);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:14px}
+  #modalRoot .overlay.nb{backdrop-filter:none;background:rgba(2,10,6,.30)}
   .modal{width:min(520px,100%);max-height:94dvh;overflow:auto;background:linear-gradient(180deg,#103026,#0a2018);border:1px solid rgba(231,197,104,.4);border-radius:18px;padding:18px 16px;box-shadow:0 30px 90px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.04);animation:popOver .22s ease-out}
   @keyframes popOver{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
   .modal-head{font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:700;color:#f6e7b8;text-align:center;letter-spacing:.02em}
@@ -321,6 +322,39 @@
   }
   /* slightly smaller side seats so the diamond always has room */
   .seat-left .seat-inner,.seat-right .seat-inner{padding:3px 5px}
+
+  /* Decision panels stay ABOVE the real hand: no backdrop tint or blur. */
+  #modalRoot .overlay.nb{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;align-items:flex-start;padding:10px;pointer-events:none}
+  #modalRoot .overlay.nb .modal{pointer-events:auto;width:min(410px,100%);max-height:var(--decision-room,calc(100dvh - 200px));padding:10px 12px;border-radius:13px;overscroll-behavior:contain;scrollbar-width:thin;box-shadow:0 6px 22px rgba(0,0,0,.4);animation:none}
+  .overlay.nb .modal-head{font-size:18px;line-height:1.2}
+  .overlay.nb .modal-head svg{width:19px;height:19px}
+  .overlay.nb .sub{font-size:11px;line-height:1.35;margin:4px 0 7px}
+  .overlay.nb .note{font-size:10px;line-height:1.3;padding:5px 7px;margin:3px 0 6px}
+  .overlay.nb .modal-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px!important;margin-top:6px}
+  .overlay.nb .btn-primary,.overlay.nb .btn-ghost{min-height:38px;margin:0;padding:7px 6px;font-size:11px;letter-spacing:0;border-radius:8px;line-height:1.25}
+  .overlay.nb .hint{font-size:9px;line-height:1.35;margin:6px 0 0}
+  .overlay.nb .khowasha{margin:6px 0 0;padding:5px 6px;border-radius:8px}
+  .overlay.nb .khowasha-title{font-size:8px;margin-bottom:4px}
+  .overlay.nb .khowasha-row{gap:6px}
+  .overlay.nb .khowasha-btn{flex-direction:row;justify-content:center;flex-wrap:wrap;gap:4px;min-height:36px;padding:5px;max-width:none;border-radius:7px}
+  .overlay.nb .khowasha-btn .kmark{font-size:13px}
+  .overlay.nb .khowasha-btn .kname{font-size:10px}
+  .overlay.nb .khowasha-btn .ksub{font-size:8px}
+  .overlay.nb .khowasha-partner{margin-top:4px;padding-top:4px;gap:4px}
+  .overlay.nb .khowasha-partner .kp-name,.overlay.nb .khowasha-partner .kp-mark{font-size:9px;letter-spacing:0}
+  .overlay.nb .first5{gap:4px;margin:4px 0 6px}
+  .overlay.nb .first5 .card{--c:40px}
+  .overlay.nb .suit-grid{gap:5px;margin:6px 0 0}
+  .overlay.nb .suit-btn{padding:5px;border-radius:8px;gap:1px}
+  .overlay.nb .suit-btn .big-suit{font-size:23px}
+  .overlay.nb .suit-btn .suit-name{font-size:11px}
+  .overlay.nb .suit-btn .suit-ranks{font-size:9px}
+  .overlay.nb .suit-btn .tag-best{top:4px;right:5px;font-size:7px}
+  .seat-claim{font-size:9px;line-height:1.25;font-weight:700;color:#f3d57c;margin:2px 0;max-width:125px;text-align:center;white-space:normal;letter-spacing:.02em}
+  .decision-rang{display:flex;justify-content:center;margin:8px 0 1px}
+  .overlay.nb .decision-rang .rang-badge{width:44px;height:44px;flex:none;z-index:auto}
+  .overlay.nb .decision-rang .suit{font-size:23px;line-height:1}
+  .overlay.nb .decision-rang .lbl{font-size:6px;margin-top:1px}
 </style>
 </head>
 <body>
@@ -335,6 +369,7 @@
       <div class="trump-badge none" id="trumpBadge">?</div>
       <div class="mini-lbl">RANG</div>
       <div class="hakim-lbl" id="hakimLbl">Hakim: —</div>
+      <div class="hakim-lbl" id="gamesLbl" style="color:#e7c568;letter-spacing:.12em">GAMES: 0 — 0</div>
     </div>
     <div class="team-pill them" id="teamThem">
       <div class="tname">OPPONENTS</div>
@@ -485,6 +520,7 @@ let soundOn = true;
 let toastTimer = null;
 
 let setup = { names: ['Khiladi', 'Khan Sahab', 'Chacha Jan', 'Malik Sahab'], humanSeat: 0, target: 7, streakMode: 'player' };
+let gameWins = [0, 0];   // team 0 / team 1 — kitne GAME jeete (session)
 let draft = { names: setup.names.slice(), humanSeat: setup.humanSeat, streakMode: setup.streakMode };
 const stats = { matches: 0, rounds: 0, results: [], hakimLog: [] };
 
@@ -595,6 +631,7 @@ function startMatch(opts){
     target: o.target || 7,
     streakMode: 'player'   // lagataar hath sirf ek hi khelari ke — sathi ki jeet par reset
   };
+  const hak0 = (o && o.hakimSeat != null) ? o.hakimSeat : setup.humanSeat;
   G = {
     names: setup.names.slice(),
     humanSeat: setup.humanSeat,
@@ -602,8 +639,14 @@ function startMatch(opts){
     streakMode: setup.streakMode,
     votes: {},
     courts: [0, 0],
-    hakim: setup.humanSeat,
+    hakim: hak0,
     nextHakim: null,
+    playerTricks: [0, 0, 0, 0],
+    cutCards: null, cutRevealed: 0, cutWinner: null,
+    nextGameVotes: null, nextGameHakim: null,
+    gamesWon: gameWins.slice(),
+    center: [], streak: { seat: null, count: 0 }, pairMode: false,
+    plays: 0, lastTrickWinner: null, haath: 1,
     phase: 'idle',
     paused: false,
     busy: false,
@@ -631,7 +674,94 @@ function startMatch(opts){
   };
   stats.matches++;
   closeModal();
-  startRound();
+  if (o && o.cutDeal) startCutDeal();   // pehla game: sab ek patta phenkenge — sab se bara deal lega
+  else startRound();
+}
+
+/* ---------- CUT DEAL: sab ko 1 random patta — sab se bara patta deal lega ---------- */
+function cutVal(c){
+  const SUIT_STRENGTH = { S: 3, D: 2, C: 1, H: 0 };   // ♠♦♣♥ — kala pehle
+  return (13 - RANKS.indexOf(c.r)) * 4 + SUIT_STRENGTH[c.s];
+}
+function startCutDeal(){
+  GEN++;
+  if (!G) return;
+  G.phase = 'cutDeal';
+  G.paused = false;
+  G.busy = true;
+  const d = shuffle(makeDeck());
+  G.cutCards = [d[0], d[1], d[2], d[3]];
+  G.cutRevealed = 0;
+  G.cutWinner = null;
+  G.trick = [];
+  render();
+  const step = () => {
+    if (!G || G.phase !== 'cutDeal') return;
+    if (G.cutRevealed < 4){
+      const i = G.cutRevealed;
+      G.trick.push({ seat: i, card: G.cutCards[i] });
+      G.cutRevealed = i + 1;
+      sfx('play');
+      render();
+      later(450, step);
+    } else {
+      let best = 0;
+      for (let i = 1; i < 4; i++) if (cutVal(G.cutCards[i]) > cutVal(G.cutCards[best])) best = i;
+      G.cutWinner = best;
+      G.hakim = best;
+      render();
+      sfx('court');
+      later(1500, () => {
+        if (!G || G.phase !== 'cutDeal') return;
+        G.cutCards = null;
+        G.cutRevealed = 0;
+        G.trick = [];
+        startRound();
+      });
+    }
+  };
+  later(650, step);
+}
+
+/* ---------- NEXT GAME: dono teamon ki razi-mandi ---------- */
+function updateNextGameRows(){
+  if (!G) return;
+  const votes = G.nextGameVotes || [false, false];
+  for (let t = 0; t < 2; t++){
+    const row = $('ngRow' + t);
+    if (row) row.innerHTML = '<span class="kp-name">' + teamName(t) + '</span>' +
+      (votes[t] ? '<span class="kp-mark sahi">✓ Haan</span>' : '<span class="kp-mark">intezar…</span>');
+  }
+  const ng = $('btnNextGame');
+  if (ng && votes[teamOf(G.humanSeat)]){ ng.setAttribute('disabled', 'true'); ng.style.opacity = '.5'; }
+}
+function applyNextGameVote(team){
+  if (!G || !G.matchOver) return;
+  if (!G.nextGameVotes) G.nextGameVotes = [false, false];
+  if (G.nextGameVotes[team]) return;
+  G.nextGameVotes[team] = true;
+  if (typeof netUi === 'function') netUi('nextgameVotes', { votes: G.nextGameVotes.slice() });
+  updateNextGameRows();
+  if (!G.nextGameVotes[1 - team]){
+    if (!(typeof netOnline === 'function' && netOnline())){
+      later(700, () => { if (G && G.matchOver) applyNextGameVote(1 - team); });   // AI team razi
+    }
+    return;
+  }
+  const hakim = (G.nextGameHakim != null) ? G.nextGameHakim : G.humanSeat;
+  const names = G.names.slice();
+  const humanSeat = G.humanSeat;
+  const target = G.target;
+  later(800, () => {
+    startMatch({ names, humanSeat, target, hakimSeat: hakim, cutDeal: false });
+  });
+}
+function voteNextGame(){
+  if (!G || !G.matchOver) return;
+  if (typeof netOnline === 'function' && netOnline()){
+    if (typeof netAct === 'function' && netAct({ t: 'nextgame' })) return;
+  }
+  applyNextGameVote(teamOf(G.humanSeat));
 }
 
 const DEAL_MS = 85;   // ek patta dene ka waqt (SPEED se scale hota hai)
@@ -661,9 +791,11 @@ function startRound(){
   G.roundLastTake = 0;
   G.reveal = [];
   G.roundPeace = false;
+  G.peaceAcceptedTeam = null;
   G.peaceWinner = null;
   G.forcedWin = null;
   G.roundForced = false;
+  G.seatClaims = [[], [], [], []]; // caller labels for this deal only
   G.kotCall = null;        // {team, at}
   G.peaceCall = null;      // {team, at}
   G.khowasha = null;       // Khowasha (aap): 'sahi' | 'ghalat' | null
@@ -721,7 +853,7 @@ function askTrump(){
 }
 
 function applyTrump(suit){
-  if (typeof netAct === 'function' && netAct({ t: 'trump', suit })) return;
+  if (typeof netAct === 'function' && netAct({ t: 'trump', suit })){ closeModal(); return; }
   if (!G || G.phase !== 'trump') return;
   if (G.trick.length) return;
   G.trump = suit;
@@ -730,25 +862,32 @@ function applyTrump(suit){
   toast(who + ' ne Rang ' + SUIT_CH[suit] + ' ' + SNAME[suit] + ' chuna');
   sfx('trump');
 
-  // CHAKKA: agar Hakim ke paas rang ka A he to deal rok kar chakka poochho
-  const hasAce = (G.hands[G.hakim] || []).some(c => c.s === suit && c.r === 'A');
-  if (hasAce){
+  // CHAKKA: jis ke bhi pehle 5 patton me rang ka A ho — hakim ya koi bhi — CHAKKA bol sakta he
+  const aceSeat = chakkaAceSeat();
+  if (aceSeat >= 0){
     G.phase = 'chakka';
     G.chakkaCall = null;
     render();
-    if (G.hakim === G.humanSeat){
+    if (aceSeat === G.humanSeat){
       if (window.__CP_AUTO_HUMAN) later(40, () => { if (G && G.phase === 'chakka') pressChakka(); });
-      else openChakkaOfferModal();      // 5 patte + CHAKKA batan
+      else openChakkaOfferModal(aceSeat);      // 5 patte + CHAKKA batan
     } else if (typeof netOnline === 'function' && netOnline()){
-      if (typeof netUi === 'function') netUi('chakkaOffer');   // remote hakim sochega
+      if (typeof netUi === 'function') netUi('chakkaOffer', { seat: aceSeat });   // A wala sochega
     } else {
-      later(900, aiChakkaOffer);
+      later(900, () => aiChakkaOffer(aceSeat));
     }
     return;
   }
   continueDealAfterTrump();
 }
 
+function chakkaAceSeat(){
+  if (!G || !G.trump) return -1;
+  for (let i = 0; i < 4; i++){
+    if ((G.hands[i] || []).some(c => c.s === G.trump && c.r === 'A')) return i;
+  }
+  return -1;
+}
 function continueDealAfterTrump(){
   if (!G) return;
   if (G.chakkaCall && G.chakkaCall.status === 'pending') return;   // jawab abhi baqi he
@@ -760,11 +899,12 @@ function continueDealAfterTrump(){
 }
 
 /* ---------- CHAKKA: offer (hakim ke paas rang ka A) ---------- */
-function openChakkaOfferModal(){
+function openChakkaOfferModal(aceSeat){
   if (!G) return;
-  const hand = sortHand(G.hands[G.hakim] || [], G.trump);
+  const who = (aceSeat != null && aceSeat >= 0) ? aceSeat : chakkaAceSeat();
+  const hand = sortHand(G.hands[who] || [], G.trump);
   const cardsRow = hand.map(c => cardHTML(c)).join('');
-  openOverlay(
+  openOverlayNB(
     '<div class="modal-head">' + CROWN_SVG + ' Chakka?</div>' +
     '<p class="sub">Aap ke paas <b>' + SUIT_CH[G.trump] + ' ' + SNAME[G.trump] + ' ka A</b> he — ye aap ke <b>pehle 5 patte</b> hain.<br>Aap <b>CHAKKA</b> bol sakte hain ya khel jari rakh sakte hain.</p>' +
     '<div class="first5">' + cardsRow + '</div>' +
@@ -772,7 +912,7 @@ function openChakkaOfferModal(){
       '<button class="btn-primary" id="btnChakka">CHAKKA</button>' +
       '<button class="btn-ghost" id="btnChakkaSkip">Nahi — Khel Jari Rakhein</button>' +
     '</div>' +
-    '<p class="hint">Chakka bolne par doosri team se poochha jayega — "Han chakka he" to aap ko 2 points aur deal dobara shuru hogi.</p>'
+    decisionRangHTML()
   );
   $('btnChakka').addEventListener('click', () => { sfx('click'); pressChakka(); });
   $('btnChakkaSkip').addEventListener('click', () => {
@@ -783,22 +923,26 @@ function openChakkaOfferModal(){
   });
 }
 
-function aiChakkaOffer(){
+function aiChakkaOffer(aceSeat){
   if (!G || G.phase !== 'chakka' || G.chakkaCall) return;
-  const trumps = (G.hands[G.hakim] || []).filter(c => c.s === G.trump);
+  const who = (aceSeat != null && aceSeat >= 0) ? aceSeat : chakkaAceSeat();
+  const trumps = (G.hands[who] || []).filter(c => c.s === G.trump);
   // AI chakka bolta he agar uske paas A ke sath 2 aur trump bhi hon
   if (trumps.length >= 3){
-    pressChakka();
+    pressChakka(who);
   } else {
     continueDealAfterTrump();
   }
 }
 
 /* ---------- CHAKKA: doosri team ka jawab ---------- */
-function pressChakka(){
-  if (typeof netAct === 'function' && netAct({ t: 'chakkaPress' })) return;
+function pressChakka(bySeat){
+  if (typeof netAct === 'function' && netAct({ t: 'chakkaPress' })){ closeModal(); return; }
   if (!G || G.phase !== 'chakka' || G.chakkaCall) return;
-  G.chakkaCall = { team: teamOf(G.hakim), by: G.hakim, status: 'pending' };
+  const caller = (bySeat != null && bySeat >= 0) ? bySeat : chakkaAceSeat();
+  if (caller < 0) return;
+  G.chakkaCall = { team: teamOf(caller), by: caller, status: 'pending' };
+  markSeatClaim(caller, 'CHAKKA');
   closeModal();
   sfx('trump');
   render();
@@ -920,6 +1064,10 @@ function evaluateKhowasha(){
     }
   }, Math.max(0, 1100 * SPEED));
 }
+function decisionRangHTML(){
+  const suit = G && G.trump;
+  return '<div class="decision-rang"><div class="rang-badge' + (suit && isRed(suit) ? ' red' : '') + '" aria-label="Rang: ' + (suit ? SNAME[suit] : 'abhi nahi') + '"><span class="suit">' + (suit ? SUIT_CH[suit] : '?') + '</span><span class="lbl">RANG</span></div></div>';
+}
 function openChakkaResponseModal(){
   if (!G || !G.chakkaCall) return;
   G.khowasha = null;
@@ -927,19 +1075,51 @@ function openChakkaResponseModal(){
   G.khowashaFor = 'chakka';
   const chTeam = G.chakkaCall.team;
   const oppTeam = 1 - chTeam;
-  openOverlay(
+  openOverlayNB(
     '<div class="modal-head">CHAKKA!</div>' +
     '<p class="sub"><b>' + teamName(chTeam) + '</b> ne <b>CHAKKA</b> bola he.<br>Kya sach me chakka he?</p>' +
     '<div class="note" style="text-align:center">' + teamName(oppTeam) + ' ka jawab?</div>' +
-    '<div class="modal-actions">' +
+    '<div class="modal-actions" style="flex-direction:column;gap:9px">' +
       '<button class="btn-primary" id="btnChakkaYes">Han Chakka He</button>' +
       '<button class="btn-ghost" id="btnChakkaNo">Chakka Nahi He</button>' +
+      (G.chakkaCall.waited ? '' :
+        '<button class="btn-ghost" id="btnChakkaNaat">5 Patton pe Naat</button>' +
+        '<button class="btn-ghost" id="btnChakkaWait">Wait — Patte Dekhun</button>') +
     '</div>' +
     khowashaHTML() +
-    '<p class="hint">"Han Chakka He" → chakka bolne wali team ko 2 points aur deal dobara shuru.<br>"Chakka Nahi He" → khel shuru; phir KOT hua to chakka wali team ko 3 points.</p>'
+    decisionRangHTML()
   );
   $('btnChakkaYes').addEventListener('click', () => { sfx('click'); if (typeof netAct === 'function' && netAct({ t: 'chakkaAnswer', v: true })) return; resolveChakka(true); });
   $('btnChakkaNo').addEventListener('click', () => { sfx('click'); if (typeof netAct === 'function' && netAct({ t: 'chakkaAnswer', v: false })) return; resolveChakka(false); });
+  const nbtn = $('btnChakkaNaat');
+  if (nbtn) nbtn.addEventListener('click', () => { sfx('click'); if (typeof netAct === 'function' && netAct({ t: 'chakkaAnswer', v: 'naat' })) return; chakkaNaat(G.humanSeat); });
+  const wbtn = $('btnChakkaWait');
+  if (wbtn) wbtn.addEventListener('click', () => { sfx('click'); if (typeof netAct === 'function' && netAct({ t: 'chakkaWait' })) return; chakkaWait(); });
+}
+
+/* ---------- CHAKKA: 5 patton pe Naat ---------- */
+function chakkaNaat(bySeat){
+  if (!G || !G.chakkaCall || G.chakkaCall.status !== 'pending' || G.chakkaCall.waited || G.phase !== 'chakka') return;
+  if (teamOf(bySeat) === G.chakkaCall.team) return;
+  if (typeof netUi === 'function') netUi('shadow', { fn: 'chakkaNaat', args: [bySeat] });
+  G.chakkaCall.naatBy = bySeat;
+  toast('5 Patton pe Naat — chakka nahi! (+1 point agar sahi)');
+  resolveChakka(false);
+}
+
+/* ---------- CHAKKA: Wait — pehle poore patte do ---------- */
+function chakkaWait(){
+  if (!G || !G.chakkaCall || G.chakkaCall.status !== 'pending' || G.chakkaCall.waited || G.phase !== 'chakka') return;
+  cancelAutoAnswer();
+  if (typeof netUi === 'function') netUi('shadow', { fn: 'chakkaWait', args: [] });
+  G.chakkaCall.waited = true;
+  closeModal();
+  toast('Poore patte baante ja rahe hain…');
+  if (typeof netIsClient === 'function' && netIsClient()) return;
+  G.phase = 'dealing';
+  G.haath = 2;
+  render();
+  later(320, dealTick);
 }
 
 function aiChakkaResponse(){
@@ -954,7 +1134,7 @@ function aiChakkaResponse(){
 }
 
 function resolveChakka(accepted){
-  if (!G || !G.chakkaCall) return;
+  if (!G || !G.chakkaCall || G.chakkaCall.status !== 'pending' || G.phase !== 'chakka') return;
   if (typeof netUi === 'function') netUi('shadow', { fn: 'resolveChakka', args: [!!accepted] });
   closeModal();
   if (accepted){
@@ -973,6 +1153,22 @@ function resolveChakka(accepted){
 }
 
 function finishDeal(){
+  // Wait dabaya tha? Patte poore — ab faisla karo
+  if (G.chakkaCall && G.chakkaCall.status === 'pending'){
+    G.phase = 'chakka';
+    G.busy = false;
+    render();
+    const oppTeam = 1 - G.chakkaCall.team;
+    if (typeof netOnline === 'function' && netOnline()){
+      if (typeof netUi === 'function') netUi('chakkaResponse');
+      if (teamOf(G.humanSeat) === oppTeam) openChakkaResponseModal();
+    } else if (teamOf(G.humanSeat) === oppTeam){
+      openChakkaResponseModal();
+    } else {
+      later(900, aiChakkaResponse);
+    }
+    return;
+  }
   G.phase = 'playing';
   G.turn = G.hakim;
   G.busy = false;
@@ -1031,6 +1227,56 @@ function bestOfTrick(trick, trump){
 }
 function trickWinner(){ return bestOfTrick(G.trick, G.trump); }
 
+// Host owns the deadline; clients only display the countdown.
+function timeoutSmallCard(seat){
+  const legal = legalCards(seat);
+  if (!legal.length) return null;
+  const plain = legal.filter(c => c.s !== G.trump);
+  const pool = plain.length ? plain : legal;
+  const counts = {};
+  for (const c of pool) counts[c.s] = (counts[c.s] || 0) + 1;
+  const suits = SUIT_ORDER.filter(s => counts[s]);
+  suits.sort((a,b) => counts[b] - counts[a]);
+  return pool.filter(c => c.s === suits[0]).sort((a,b) => RV[a.r] - RV[b.r])[0];
+}
+let turnClockGame = null, turnClockKey = null;
+setInterval(() => {
+  if (!G) { turnClockGame = null; turnClockKey = null; return; }
+  const client = typeof netIsClient === 'function' && netIsClient();
+  const online = typeof netOnline === 'function' && netOnline();
+  const active = G.phase === 'playing' && !G.paused && !G.busy && G.turn != null;
+  if (!client){
+    const timed = active && !window.__CP_MANUAL && (online || G.turn === G.humanSeat);
+    if (!timed){
+      turnClockKey = null;
+      G.turnDeadline = null;
+    } else {
+      const key = GEN + ':' + G.turn + ':' + G.hands.map(h => h.length).join(',');
+      if (turnClockGame !== G || turnClockKey !== key || !G.turnDeadline){
+        turnClockGame = G;
+        turnClockKey = key;
+        G.turnDeadline = Date.now() + 10000;
+        render();
+      } else if (Date.now() >= G.turnDeadline){
+        const seat = G.turn;
+        const card = timeoutSmallCard(seat);
+        G.turnDeadline = null;
+        turnClockKey = null;
+        if (card) doPlay(seat, card);
+      }
+    }
+  }
+  let badge = $('turnClock');
+  if (!badge && $('status')){
+    badge = document.createElement('span');
+    badge.id = 'turnClock';
+    badge.style.cssText = 'margin-left:8px;color:#e7c568;font-weight:bold;white-space:nowrap';
+    $('status').appendChild(badge);
+  }
+  if (badge) badge.textContent = active && G.turnDeadline
+    ? '⏱ ' + Math.max(0, Math.ceil((G.turnDeadline - Date.now()) / 1000)) + 's' : '';
+}, 200);
+
 function drive(){
   if (!G || G.phase !== 'playing' || G.paused) return;
   if (typeof netIsClient === 'function' && netIsClient()){ render(); return; }
@@ -1068,7 +1314,7 @@ function drive(){
   });
 }
 
-function doPlay(seat, card){
+function doPlay(seat, card, isSlam){
   if (!G || G.phase !== 'playing' || G.paused || G.busy) return;
   if (G.turn !== seat || !card) return;
   const legal = legalCards(seat);
@@ -1077,10 +1323,12 @@ function doPlay(seat, card){
   const idx = hand.findIndex(c => c.id === card.id);
   if (idx < 0) return;
 
+  const cutsWithTrump = G.trick.length > 0 && G.trick[0].card.s !== G.trump && card.s === G.trump;
+  isSlam = cutsWithTrump || (!!isSlam && canSlam(card, seat)); // only cuts auto-slam; other cards require the button
   hand.splice(idx, 1);
   G.trick.push({seat, card});
   G.busy = true;
-  sfx('play');
+  if (!isSlam) sfx('play');   // slam par sirf slam ki awaz — double NAHI
 
   if (G.trick.length === 4){
     render();
@@ -1095,6 +1343,11 @@ function doPlay(seat, card){
       drive();
     });
   }
+  if (isSlam){
+    slamFxAt(seat);
+    if (typeof netUi === 'function') netUi('slamFx', { seat });
+  }
+
 }
 
 function needStreak(){ return G.pairMode ? 2 : 3; }
@@ -1122,6 +1375,7 @@ function resolveTrick(){
   if (G.streak.count >= need){
     took = G.center.length;
     G.tricks[teamOf(winner.seat)] += took;
+    G.playerTricks[winner.seat] += took;
     G.center = [];
     G.streak = { seat: null, count: 0 };
     G.pairMode = true;          // ab se "do do hath" ka game
@@ -1228,7 +1482,7 @@ function endRound(){
   if (G.roundPeace || forced){ G.center = []; G.trick = []; }
   if (forced && !forced.chakka){ G.tricks = forced.team === 0 ? [13, 0] : [0, 13]; }
 
-  // ---------- nateeja: challenge (KOT / PEACE) ke sath ----------
+  // ---------- nateeja: challenge (COURT / PIECE) ke sath ----------
   const kc = G.kotCall, pc = G.peaceCall;
   let wt, kot = false, gain = 1, kind = 'normal';
 
@@ -1236,14 +1490,16 @@ function endRound(){
     // "Han Chakka He" -> chakka bolne wali team ko 2 points, deal dobara
     wt = forced.team; kot = false; gain = 2; kind = 'chakkaAccepted';
   } else if (G.chakkaCall && G.chakkaCall.status === 'denied'){
-    // Chakka deny hua — phir KOT hua?
+    // Chakka deny hua — phir COURT hua?
     const chTeam = G.chakkaCall.team, chOpp = 1 - chTeam;
     if (G.tricks[chOpp] === 0){
-      // chakka wali team ne KOT kar diya -> 3 points
+      // chakka wali team ne COURT kar diya -> 3 points
       wt = chTeam; kot = true; gain = 3; kind = 'chakkaKot';
     } else if (G.tricks[chTeam] === 0){
-      // rang banane wali (chakka) team hi KOT ho gayi -> doosri team ko 4 points
+      // rang banane wali (chakka) team hi COURT ho gayi -> doosri team ko 4 points
       wt = chOpp; kot = true; gain = 4; kind = 'chakkaKotAgainst';
+    } else if (!forced && !G.roundPeace && G.tricks[chOpp] >= 3){
+      wt = chOpp; kot = false; gain = 1; kind = 'chakkaBroken';
     } else if (forced){
       wt = forced.team; kot = true; gain = 1; kind = 'kotAccepted';
     } else if (kc){
@@ -1265,18 +1521,18 @@ function endRound(){
       gain = 1; kind = kot ? 'naturalKot' : 'normal'; if (kot && (1 - wt) === teamOf(G.hakim)){ gain = 2; kind = 'naturalKotRang'; }
     }
   } else if (forced){
-    // doosri team ne "Han KOT" maan liya -> kot bolne wali team ko sirf 1 point
+    // doosri team ne "Han COURT" maan liya -> court bolne wali team ko sirf 1 point
     wt = forced.team; kot = true; gain = 1; kind = 'kotAccepted';
   } else if (kc){
     const oppTeam = 1 - kc.team;
     if (G.tricks[oppTeam] === 0){
-      // call sahi sabit hui — KOT hua
+      // call sahi sabit hui — COURT hua
       wt = kc.team; kot = true; gain = 2; kind = 'kotProven';
     } else if (G.tricks[oppTeam] >= 3){
-      // call ghalat — jinhone "KOT Nahi Hai" kaha unhe 1 point
+      // call ghalat — jinhone "COURT Nahi Hai" kaha unhe 1 point
       wt = oppTeam; kot = false; gain = 1; kind = 'kotFailed';
       if (G.tricks[kc.team] === 0 && kc.team === teamOf(G.hakim)){
-        gain = 3; kind = 'kotFailedSwept';   // R2: Rang team ne KOT kaha, deny, khud KOT -> 3
+        gain = 3; kind = 'kotFailedSwept';   // R2: Rang team ne COURT kaha, deny, khud COURT -> 3
       }
     } else {
       wt = (G.tricks[0] > G.tricks[1] ? 0 : 1);
@@ -1284,34 +1540,34 @@ function endRound(){
       gain = 1; kind = 'kotFailedSmall';
     }
   } else if (pc){
-    // "PEACE Nahi Hai" — khel jari raha
+    // "PIECE Nahi Hai" — khel jari raha
     const callerTeam = pc.team;
     const deniers = 1 - callerTeam;
     if (G.tricks[deniers] < 7){
-      // unhon ne 7 se kam hath utaye — 1 point PEACE bolne wali team ko
+      // unhon ne 7 se kam hath utaye — 1 point PIECE bolne wali team ko
       wt = callerTeam; gain = 1; kind = 'peaceProven';
     } else if (G.tricks[deniers] <= 12){
-      // "PEACE Nahi Hai" walon ne 7+ hath utaaye — unhe 1 point
+      // "PIECE Nahi Hai" walon ne 7+ hath utaaye — unhe 1 point
       wt = deniers; gain = 1; kind = 'peaceFailed';
     } else {
-      // deniers ne poore 13 uthaaye — PEACE bolne wali team KOT ho gayi
+      // deniers ne poore 13 uthaaye — PIECE bolne wali team COURT ho gayi
       kot = true; wt = deniers;
       if (callerTeam === teamOf(G.hakim)){
-        gain = 3; kind = 'peaceKotVsRang';   // rang team (caller) KOT hui -> deniers ko 3
+        gain = 3; kind = 'peaceKotVsRang';   // rang team (caller) COURT hui -> deniers ko 3
       } else {
         gain = 2; kind = 'peaceKotByRang';   // rang team (deniers) ne 13 uthaaye -> rang ko 2
       }
     }
   } else if (G.roundPeace){
-    // doosri team ne "Han PEACE" maan liya — kisi ko point nahi
+    // doosri team ne "Han PIECE" maan liya — kisi ko point nahi
     wt = null; gain = 0; kind = 'peaceAccepted';
   } else {
     wt = (G.tricks[0] > G.tricks[1] ? 0 : 1);
     kot = (G.tricks[1 - wt] === 0);
-    gain = 1;                         // bina KOT call ke sweep = sirf 1 point
+    gain = 1;                         // bina COURT call ke sweep = sirf 1 point
     kind = kot ? 'naturalKot' : 'normal';
     if (kot && (1 - wt) === teamOf(G.hakim)){
-      gain = 2; kind = 'naturalKotRang';    // R1: Rang team hi KOT ho gayi -> 2 points
+      gain = 2; kind = 'naturalKotRang';    // R1: Rang team hi COURT ho gayi -> 2 points
     }
   }
 
@@ -1319,8 +1575,15 @@ function endRound(){
   const lt = noPoint ? null : 1 - wt;
   G.phase = 'roundEnd';
   G.busy = true;
-  if (!noPoint) G.courts[wt] += gain;
   G.roundTeam = wt;
+  // 5 patton pe Naat: chakka nahi he walon ke points + 1 (naat karne wale ki team ko)
+  G.roundNaatBonus = false;
+  if (G.chakkaCall && G.chakkaCall.status === 'denied' && G.chakkaCall.naatBy != null
+      && wt != null && gain > 0 && wt === (1 - G.chakkaCall.team)){
+    gain += 1;
+    G.roundNaatBonus = true;
+  }
+  if (!noPoint) G.courts[wt] += gain;
   G.roundKot = kot;
   G.roundGain = gain;
   G.resolveKind = kind;
@@ -1334,7 +1597,10 @@ function endRound(){
   else if (kind === 'chakkaKotAgainst') failCaller = G.hakim;
   else if (G.chakkaCall && G.chakkaCall.status === 'denied' && (kind === 'normal' || kind === 'naturalKot')) failCaller = G.hakim;
   let retained, hakimBase;
-  if (failCaller != null){
+  if (kind === 'peaceAccepted' && G.peaceAcceptedTeam != null && G.peaceAcceptedTeam !== hakimTeam){
+    retained = false;
+    hakimBase = G.hakim; // accepted opponent PIECE passes Rang to hakim's right
+  } else if (failCaller != null){
     retained = G.tricks[teamOf(failCaller)] >= 7;
     hakimBase = failCaller;
   } else {
@@ -1346,6 +1612,13 @@ function endRound(){
   G.roundForced = !!forced;
   G.matchOver = noPoint ? false : (G.courts[wt] >= G.target);
   G.matchWinner = G.matchOver ? wt : null;
+  if (G.matchOver){
+    gameWins[wt]++;
+    G.gamesWon = gameWins.slice();
+    const sA = wt, sB = wt + 2;   // jeetne wali team ke dono khiladi
+    G.nextGameHakim = (G.playerTricks[sA] >= G.playerTricks[sB]) ? sA : sB;
+    G.nextGameVotes = [false, false];
+  }
   stats.results.push({
     winnerTeam: wt,
     tricks: G.tricks.slice(),
@@ -1430,15 +1703,26 @@ function renderHUD(){
   }
   const hak = $('hakimLbl');
   if (hak) hak.textContent = 'Hakim: ' + esc(G.names[G.hakim] || '—');
+  const gl = $('gamesLbl');
+  if (gl){
+    const gw = G.gamesWon || [0, 0];
+    const myT = teamOf(G.humanSeat);
+    gl.textContent = 'GAMES: ' + gw[myT] + ' — ' + gw[1 - myT];
+  }
 }
 
+function markSeatClaim(seat, label){
+  if (!G || seat == null || seat < 0 || seat > 3) return;
+  if (!G.seatClaims) G.seatClaims = [[], [], [], []];
+  if (!G.seatClaims[seat].includes(label)) G.seatClaims[seat].push(label);
+}
 function seatHTML(seat){
   const me = seat === G.humanSeat;
   const same = teamOf(seat) === teamOf(G.humanSeat);
   const active = G.phase === 'playing' && G.turn === seat;
   const name = G.names[seat];
   const crown = G.hakim === seat ? '<span class="crown">' + CROWN_SVG + '</span>' : '';
-  const mini = me ? '' : miniHandHTML(G.hands[seat].length);
+  const mini = '';   // ulte patton ka fan NAHI dikhana — jagah saaf
   const role = me ? 'Aap' : (same ? 'Partner' : 'Opponent');
   const need = (G.pairMode ? 2 : 3);
   let sb = '';
@@ -1452,15 +1736,17 @@ function seatHTML(seat){
   const inner = '<div class="seat-inner ' + (same ? 'us' : 'them') + (active ? ' active' : '') + '">' +
     '<div class="avatar">' + esc(initial(name)) + crown + sb + '</div>' +
     '<div class="nm">' + esc(name) + '</div>' +
+    ((G.seatClaims && G.seatClaims[seat] && G.seatClaims[seat].length) ? '<div class="seat-claim">' + G.seatClaims[seat].map(label => esc(label) + ' kaha').join(' · ') + '</div>' : '') +
     '<div class="role ' + (same && !me ? 'partner' : '') + '">' + role + '</div>' +
     body +
     '</div>';
   if (!me) return inner;
-  const canCall = canCallNow();
+  const canKot = canCallNow('kot');
+  const canPeace = canCallNow('peace');
   return '<div class="seat-row">' +
-    '<button class="call-btn kot" data-call="kot"' + (canCall ? '' : ' disabled') + '>KOT</button>' +
+    '<button class="call-btn kot" data-call="kot"' + (canKot ? '' : ' disabled') + '>COURT</button>' +
     inner +
-    '<button class="call-btn peace" data-call="peace"' + (canCall ? '' : ' disabled') + '>PEACE</button>' +
+    '<button class="call-btn peace" data-call="peace"' + (canPeace ? '' : ' disabled') + '>PIECE</button>' +
     '<button class="slam-btn' + (slamArmed ? ' on' : '') + '" data-slam="1" title="Patta zameen par maaro (slam)">' + SLAM_SVG + '</button>' +
     '</div>';
 }
@@ -1558,52 +1844,16 @@ function beatsCard(x, c, trump){
   if (x.s === c.s) return RV[x.r] > RV[c.r];
   return false;
 }
-function canSlam(card){
-  // SLAM = "mera patta YE HATH pakka jeet raha he" — har haal me, har LEGAL jawab par
-  //  (a) aakhri (4th) patta jo in-4 me sabse bara ho -> chota absolute bhi OK
-  //  (b) dead discard ya maidan me koi aisa patta jo ise hara de -> NAHI
-  //  (c) beech ka: kisi or ke paas aisa LEGAL patta jo ise hara de -> NAHI
-  //      (suit follow ki majboori me phansa "beater" — jo wo khel hi nahi sakta — beater NAHI)
-  //  (d) sab se uper (koi bhi ise legally na hara sake) -> SLAM
-  if (!G || !card) return false;
-  const t = G.trick || [];
-  const trump = G.trump;
-  const me = G.humanSeat;
-  const played = {};
-  t.forEach(pr => { played[pr.seat] = 1; });
-  // meri chal ke baad jo baqi khelenge (turn order me)
-  const after = [];
-  for (let i = 1; i <= 3; i++){
-    const st = (me + i) % 4;
-    if (st !== me && !played[st]) after.push(st);
-  }
-  const led = t.length ? t[0].card.s : card.s;
-  // follow suit: led suit haath me ho to wahi khelna hoga, warna koi bhi
-  const legalOf = (st) => {
-    const h = G.hands[st] || [];
-    const f = h.filter(c => c.s === led);
-    return f.length ? f : h;
-  };
-  const winnerSeat = (cards) => {
-    let w = cards[0];
-    for (let i = 1; i < cards.length; i++){
-      if (beatsCard(cards[i].card, w.card, trump)) w = cards[i];
-    }
-    return w.seat;
-  };
-  // har LEGAL combination par mera patta hi hath uthaye — tabhi SLAM
-  const rec = (cards, depth) => {
-    if (depth === after.length) return winnerSeat(cards) === me;
-    const st = after[depth];
-    const opts = legalOf(st);
-    if (!opts.length) return rec(cards, depth + 1);
-    for (const c of opts){
-      if (!rec(cards.concat([{ seat: st, card: c }]), depth + 1)) return false;
-    }
-    return true;
-  };
-  return rec(t.map(pr => ({ seat: pr.seat, card: pr.card })).concat([{ seat: me, card: card }]), 0);
+function canSlam(card, seat){
+  // Higher cards in the player's OWN hand do not block a manual slam.
+  if (!G || !card || !RV[card.r]) return false;
+  const higher = c => c && c.s === card.s && RV[c.r] > RV[card.r];
+  seat = seat == null ? G.humanSeat : seat;
+  if ((G.hands || []).some((hand, owner) => owner !== seat && hand.some(higher))) return false;
+  if ((G.trick || []).some(play => higher(play.card))) return false;
+  return true;
 }
+
 function toggleSlam(){
   slamArmed = !slamArmed;
   render();
@@ -1650,9 +1900,8 @@ function slamFxAt(seat){
   shakeScreen();
 }
 function slamPlay(c){
-  slamFxAt(G.humanSeat);
-  doPlay(G.humanSeat, c);
-  if (typeof netUi === 'function') netUi('slamFx', { seat: G.humanSeat });
+  if (typeof netAct === 'function' && netAct({ t: 'play', id: c.id, slam: true })) return;
+  doPlay(G.humanSeat, c, true);
 }
 function renderHand(){
   const handEl = $('hand');
@@ -1663,30 +1912,25 @@ function renderHand(){
   const cards = G.trump ? sortHand(raw, G.trump) : raw.slice();
   const canPlay = G.phase === 'playing' && G.turn === G.humanSeat && !G.busy && !G.paused;
   const legalIds = canPlay ? new Set(legalCards(G.humanSeat).map(c => c.id)) : null;
-  handEl.innerHTML = cards.map(c => hidden ? cardBackHTML() : cardHTML(c, {
+  const handMarkup = cards.map(c => hidden ? cardBackHTML() : cardHTML(c, {
     play: !!(legalIds && legalIds.has(c.id)),
     dim: !!(legalIds && !legalIds.has(c.id))
   })).join('');
+  handEl.classList.toggle('myturn', !!legalIds);
+  fitDecisionPanel();
+  if (handEl._cpMarkup === handMarkup) return;
+  handEl._cpMarkup = handMarkup;
+  handEl.innerHTML = handMarkup;
   if (legalIds){
     handEl.querySelectorAll('.card.play').forEach(nd => {
       nd.addEventListener('click', () => {
         if (!G) return;
         const c = G.hands[G.humanSeat].find(x => x.id === nd.dataset.id);
         if (!c) return;
-        if (slamArmed){
-          slamArmed = false;
-          if (canSlam(c)){
-            if (typeof netIsClient === 'function' && netIsClient()){
-              slamFxAt(G.humanSeat);
-              netSend({ t: 'act', m: { t: 'play', id: c.id, slam: true } });
-              render();
-              return;
-            }
-            slamPlay(c); return;
-          }
-        }
-        if (typeof netAct === 'function' && netAct({ t: 'play', id: c.id })) return;
-        sfx('click'); doPlay(G.humanSeat, c);
+        const wantsSlam = slamArmed;
+        slamArmed = false;
+        if (typeof netAct === 'function' && netAct({ t: 'play', id: c.id, slam: wantsSlam })){ render(); return; }
+        doPlay(G.humanSeat, c, wantsSlam);
       });
     });
   }
@@ -1704,6 +1948,10 @@ function renderStatus(){
     s.innerHTML = G.chakkaCall
       ? '<span class="dot"></span> CHAKKA — doosri team ka jawab…'
       : '<span class="dot"></span> Rang ka A aap ke paas he — CHAKKA?';
+  } else if (G.phase === 'cutDeal'){
+    s.innerHTML = G.cutWinner == null
+      ? '<span class="dot"></span> Deal tay kar rahe hain — sab ek patta phenkte hain…'
+      : '<span class="dot"></span> ' + esc(G.names[G.cutWinner] || '') + ' sab se bara patta — <b>Rang ' + esc(G.names[G.cutWinner] || '') + ' banayega!</b>';
   } else if (G.phase === 'dealing'){
     s.innerHTML = '<span class="dot dim"></span> Patte baant rahe hain — Haath ' + (G.haath || 1) + '/3';
   } else if (G.phase === 'trump'){
@@ -1736,7 +1984,23 @@ function renderStatus(){
 function openOverlay(inner, cls){
   const root = $('modalRoot');
   if (!root) return;
-  root.innerHTML = '<div class="overlay"><div class="modal' + (cls ? ' ' + cls : '') + '">' + inner + '</div></div>';
+  const nb = (' ' + (cls || '') + ' ').indexOf(' nb ') >= 0;
+  root.innerHTML = '<div class="overlay' + (nb ? ' nb' : '') + '"><div class="modal' + (cls ? ' ' + cls : '') + '">' + inner + '</div></div>';
+}
+function fitDecisionPanel(){
+  const overlay = document.querySelector('#modalRoot .overlay.nb');
+  if (!overlay) return;
+  const hand = $('hand');
+  const rect = hand ? hand.getBoundingClientRect() : null;
+  const vh = window.innerHeight || document.documentElement.clientHeight;
+  const handTop = rect && rect.height > 0 && rect.top > 0 ? rect.top : vh - 175;
+  overlay.style.setProperty('--decision-room', Math.max(70, Math.min(vh - 28, handTop - 24)) + 'px');
+}
+window.addEventListener('resize', fitDecisionPanel);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fitDecisionPanel);
+function openOverlayNB(inner, cls){
+  openOverlay(inner, ((cls || '') + ' nb'));
+  fitDecisionPanel();
 }
 function closeModal(){
   const root = $('modalRoot');
@@ -1819,7 +2083,7 @@ function startFromModal(){
   const mine = String((draft.names[0] || '').trim() || 'Khiladi');
   const names = [mine, 'Khan Sahab', 'Chacha Jan', 'Malik Sahab'];
   draft.names = names.slice();
-  startMatch({names, humanSeat: 0, target: 7, streakMode: 'player'});
+  startMatch({names, humanSeat: 0, target: 7, streakMode: 'player', cutDeal: true});
 }
 
 /* ---------- trump ---------- */
@@ -1840,7 +2104,7 @@ function openTrumpModal(){
       '<span class="suit-ranks">' + ranks + '</span>' +
       '</button>';
   }
-  openOverlay(
+  openOverlayNB(
     '<div class="modal-head">' + CROWN_SVG + ' Aap Hakim Hain!</div>' +
     '<p class="sub">Pehla haath mukammal — ye aap ke <b>pehle 5 patte</b> hain.<br>Inhein dekh kar apna <b>Hokm (trump)</b> chunein.</p>' +
     '<div class="first5">' + cardsRow + '</div>' +
@@ -1867,22 +2131,23 @@ function courtsRow(){
 function outcomeText(){
   const kind = G.resolveKind;
   switch (kind){
+    case 'chakkaBroken': return 'CHAKKA toot gaya — maqabil team ne 3 ya zyada hath uthaye. Unhein <b>1 point</b> mila.';
     case 'chakkaAccepted': return 'Doosri team ne <b>"Han Chakka He"</b> maan liya — <b>2 points</b> aur deal dobara shuru hogi.';
-    case 'chakkaKot':      return 'Chakka sabit hua! Chakka bolne wali team ne <b>KOT</b> kar diya — <b>3 points</b>.';
-    case 'chakkaKotAgainst': return 'Rang banane wali team hi <b>KOT</b> ho gayi — doosri team ko <b>4 points</b>!';
-    case 'kotAccepted':  return 'Doosri team ne <b>"Han KOT"</b> maan liya — deal yahin khatam. Kot bolne wali team ko <b>1 point</b>.';
-    case 'kotProven':    return 'Aap ne KOT kaha, unhon ne "KOT Nahi Hai" kaha — magar KOT sabit hua! <b>2 points</b>.';
-    case 'kotFailed':    return 'KOT sabit nahi hua aur unhon ne hath utaye — "KOT Nahi Hai" wale ko <b>1 point</b>.';
-    case 'kotFailedSwept': return 'Rang banane wali team ne KOT kaha, unhon ne "KOT Nahi Hai" kaha — aur phir <b>wo khud KOT</b> ho gayi! Doosri team ko <b>3 points</b>.';
-    case 'kotFailedSmall': return 'KOT sabit nahi hua, magar unke paas poori collection bhi nahi thi — normal nateeja.';
-    case 'peaceAccepted': return 'Doosri team ne <b>"Han PEACE"</b> maan liya — deal khatam, magar <b>kisi ko point nahi</b> mila.';
-    case 'peaceProven':  return 'PEACE bolne wali team ko <b>1 point</b> — doosri team ke 7 se kam hath the, aur unhe koi point nahi.';
-    case 'peaceFailed':    return 'Unhon ne "PEACE Nahi Hai" kaha aur <b>7+ hath</b> uthaaye — unhe <b>1 point</b>.';
-    case 'peaceKotVsRang': return 'Rang banane wali team ne PEACE kaha — aur phir <b>wo khud KOT</b> ho gayi! Doosri team ko <b>3 points</b>.';
-    case 'peaceKotByRang': return 'Rang banane wali team ne "PEACE Nahi Hai" kaha aur <b>poore 13 hath</b> uthaaye! Rang team ko <b>2 points</b>.';
-    case 'naturalKot':   return 'Saare 13 hath! (Bina KOT call ke) — <b>1 point</b>.';
-    case 'naturalKotRang': return 'Rang banane wali team hi <b>KOT</b> ho gayi — saare 13 hath! Doosri team ko <b>2 points</b>.';
-    default:             return '7 se ziyada hath — doosri team <b>PEACE</b> — <b>1 point</b>.';
+    case 'chakkaKot':      return 'Chakka sabit hua! Chakka bolne wali team ne <b>COURT</b> kar diya — <b>3 points</b>.';
+    case 'chakkaKotAgainst': return 'Rang banane wali team hi <b>COURT</b> ho gayi — doosri team ko <b>4 points</b>!';
+    case 'kotAccepted':  return 'Doosri team ne <b>"Han COURT"</b> maan liya — deal yahin khatam. Court bolne wali team ko <b>1 point</b>.';
+    case 'kotProven':    return 'Aap ne COURT kaha, unhon ne "COURT Nahi Hai" kaha — magar COURT sabit hua! <b>2 points</b>.';
+    case 'kotFailed':    return 'COURT sabit nahi hua aur unhon ne hath utaye — "COURT Nahi Hai" wale ko <b>1 point</b>.';
+    case 'kotFailedSwept': return 'Rang banane wali team ne COURT kaha, unhon ne "COURT Nahi Hai" kaha — aur phir <b>wo khud COURT</b> ho gayi! Doosri team ko <b>3 points</b>.';
+    case 'kotFailedSmall': return 'COURT sabit nahi hua, magar unke paas poori collection bhi nahi thi — normal nateeja.';
+    case 'peaceAccepted': return 'Doosri team ne <b>"Han PIECE"</b> maan liya — deal khatam, magar <b>kisi ko point nahi</b> mila.';
+    case 'peaceProven':  return 'PIECE bolne wali team ko <b>1 point</b> — doosri team ke 7 se kam hath the, aur unhe koi point nahi.';
+    case 'peaceFailed':    return 'Unhon ne "PIECE Nahi Hai" kaha aur <b>7+ hath</b> uthaaye — unhe <b>1 point</b>.';
+    case 'peaceKotVsRang': return 'Rang banane wali team ne PIECE kaha — aur phir <b>wo khud COURT</b> ho gayi! Doosri team ko <b>3 points</b>.';
+    case 'peaceKotByRang': return 'Rang banane wali team ne "PIECE Nahi Hai" kaha aur <b>poore 13 hath</b> uthaaye! Rang team ko <b>2 points</b>.';
+    case 'naturalKot':   return 'Saare 13 hath! (Bina COURT call ke) — <b>1 point</b>.';
+    case 'naturalKotRang': return 'Rang banane wali team hi <b>COURT</b> ho gayi — saare 13 hath! Doosri team ko <b>2 points</b>.';
+    default:             return '7 se ziyada hath — doosri team <b>PIECE</b> — <b>1 point</b>.';
   }
 }
 
@@ -1893,20 +2158,21 @@ function openRoundModal(retained){
   const lt = noPoint ? null : 1 - wt;
   const mine = !noPoint && wt === teamOf(G.humanSeat);
   openOverlay(
-    '<div class="result-head">' + (G.resolveKind === 'chakkaAccepted' ? 'CHAKKA!' : (noPoint ? 'KOI POINT NAHI' : (G.roundKot ? 'KOT!' : 'DEAL KHATAM'))) + '</div>' +
+    '<div class="result-head">' + (G.resolveKind === 'chakkaAccepted' ? 'CHAKKA!' : (noPoint ? 'KOI POINT NAHI' : (G.roundKot ? 'COURT!' : 'DEAL KHATAM'))) + '</div>' +
     '<div class="result-team' + (noPoint ? ' them' : (mine ? '' : ' them')) + '">' +
-      (noPoint ? 'Is deal par kisi ko point nahi mila' : (teamName(wt) + ' — ' + (G.roundKot ? 'KOT (' : (G.resolveKind === 'chakkaAccepted' ? 'CHAKKA (' : 'JEET (')) + G.roundGain + ' point' + (G.roundGain > 1 ? 's' : '') + ')')) +
+      (noPoint ? 'Is deal par kisi ko point nahi mila' : (teamName(wt) + ' — ' + (G.roundKot ? 'COURT (' : (G.resolveKind === 'chakkaAccepted' ? 'CHAKKA (' : 'JEET (')) + G.roundGain + ' point' + (G.roundGain > 1 ? 's' : '') + ')')) +
     '</div>' +
     (G.resolveKind === 'chakkaAccepted'
       ? '<div class="note" style="text-align:center;margin:10px 0">Deal khelne se pehle hi khatam ho gayi — <b>CHAKKA</b> maan liya gaya.</div>'
       : '<div class="score-big">' + G.tricks[0] + ' <span>—</span> ' + G.tricks[1] + '</div>') +
     '<p class="sub">' + outcomeText() +
       (G.roundLastTake ? '<br>Aakhri hath ne ' + G.roundLastTake + ' baaziyan utha lin.' : '') +
+      (G.roundNaatBonus ? '<br><b style="color:#e7c568">5 Patton pe Naat — +1 point!</b>' : '') +
     '</p>' +
     (noPoint || G.resolveKind === 'chakkaAccepted' ? '' :
     '<div class="note" style="text-align:center">' +
       '<span style="color:#a9c0b0;font-size:10px;letter-spacing:.14em">HAARNEWALI TEAM</span><br>' +
-      '<b style="font-size:15px;color:' + (G.roundKot ? '#e7c568' : '#9fd4bb') + '">' + teamName(lt) + ' — ' + (G.roundKot ? 'KOT HO GAYI' : 'PEACE') + '</b>' +
+      '<b style="font-size:15px;color:' + (G.roundKot ? '#e7c568' : '#9fd4bb') + '">' + teamName(lt) + ' — ' + (G.roundKot ? 'COURT HO GAYI' : 'PIECE') + '</b>' +
     '</div>') +
     courtsRow() +
     '<div class="note">' + (G.roundFailCaller != null
@@ -1914,7 +2180,7 @@ function openRoundModal(retained){
           ? 'Challenge nakam — magar <b>' + esc(G.names[G.roundFailCaller]) + '</b> ki team ne <b>7+ hath</b> utaaye, is liye hakim wahi: <b>' + esc(G.names[G.hakim]) + '</b>.'
           : '<b>' + esc(G.names[G.roundFailCaller]) + '</b> ki team ke <b>7 se kam</b> hath — challenge nakam. Agla deal <b>' + esc(G.names[G.nextHakim]) + '</b> baantega (rang wahi banayega).')
       : noPoint
-      ? 'Agla deal phir <b>' + esc(G.names[G.nextHakim]) + '</b> hi baantega — hakim wahi raha.'
+      ? (retained ? 'Agla deal phir <b>' + esc(G.names[G.nextHakim]) + '</b> hi baantega — hakim wahi raha.' : 'Han PIECE — agla Hakim <b>' + esc(G.names[G.nextHakim]) + '</b> hoga, purane Hakim ke right-hand wala. Rang wahi banayega.')
       : G.roundForced
       ? 'Agla deal phir <b>' + esc(G.names[G.nextHakim]) + '</b> ko milega — jis ne Rang chuna tha.'
       : retained
@@ -1937,37 +2203,47 @@ function openMatchModal(){
     '<div class="result-team' + (mine ? '' : ' them') + '">' + teamName(wt) + ' ne jeet liya!</div>' +
     '<p class="sub">' + (mine ? 'Aap ki team ne 7 points poore kar liye — match winner!' : 'Doosri team ne 7 points poore kar liye — agli baar dekhte hain!') + '</p>' +
     courtsRow() +
-    ((typeof netOnline === 'function' && netOnline())
-      ? '<p class="hint" style="text-align:center;margin:12px 0 0">Match khatam — naye khel ke liye naya room banayein.</p>'
-      : '<div class="modal-actions">' +
-        '<button class="btn-primary" id="btnRematch">Naya Match</button>' +
-        '<button class="btn-ghost" id="btnSetup">Naya Setup</button>' +
-      '</div>')
+    '<div class="tb-title" style="margin:14px 0 6px;text-align:center">NEXT GAME? (dono teamon ki razi-mandi)</div>' +
+    '<div class="khowasha-partner" style="justify-content:space-between" id="ngRow0"></div>' +
+    '<div class="khowasha-partner" style="justify-content:space-between" id="ngRow1"></div>' +
+    '<div class="modal-actions" style="margin-top:12px">' +
+      '<button class="btn-primary" id="btnNextGame">Next Game — Haan!</button>' +
+      ((typeof netOnline === 'function' && netOnline()) ? '' : '<button class="btn-ghost" id="btnMatchExit">Bahar</button>') +
+    '</div>' +
+    '<p class="hint" style="text-align:center">' + ((typeof netOnline === 'function' && netOnline()) ? 'Jeetne wali team me sab se ziyada hath walon ko agla deal.' : 'Jeetne wali team me sab se ziyada hath wala agla deal lega.') + '</p>'
   );
+  updateNextGameRows();
   if (mine) confetti();
   sfx('court');
-  const rb = $('btnRematch');
-  if (rb) rb.addEventListener('click', () => {
+  const ng = $('btnNextGame');
+  if (ng) ng.addEventListener('click', () => { sfx('click'); voteNextGame(); });
+  const bx = $('btnMatchExit');
+  if (bx) bx.addEventListener('click', () => {
     sfx('click');
-    if (typeof netAct === 'function' && netAct({ t: 'rematch' })) return;
-    startMatch(setup);
+    GEN++;
+    G = null;
+    closeModal();
+    openStartModal();
   });
-  const sb = $('btnSetup');
-  if (sb) sb.addEventListener('click', () => {
-    sfx('click');
-    if (typeof netOnline === 'function' && netOnline()){ toast('Online me room dobara banayein'); return; }
-    draft.names = setup.names.slice(); draft.humanSeat = setup.humanSeat; draft.streakMode = setup.streakMode; openStartModal();
-  });
-  if (window.__CP_AUTO_HUMAN && !window.__CP_NO_AUTOREMATCH) later(30, () => { const x = $('btnRematch'); if (x) x.click(); });
+  if (window.__CP_AUTO_HUMAN && !window.__CP_NO_AUTOREMATCH) later(30, () => { const x = $('btnNextGame'); if (x) x.click(); });
 }
 
-/* ---------- KOT / PEACE calls ---------- */
+/* ---------- COURT / PIECE calls ---------- */
 function opponentSeats(){
   return [(G.humanSeat + 1) % 4, (G.humanSeat + 3) % 4];
 }
-function canCallNow(){
-  // ek deal me sirf ek hi challenge (KOT ya PEACE) — dobara buttons band rahenge
-  return G && G.phase === 'playing' && !G.paused && !G.matchOver && !G.kotCall && !G.peaceCall;
+function canCallNow(kind, seat){
+  if (!G || G.phase !== 'playing' || G.paused || G.matchOver) return false;
+  seat = seat == null ? G.humanSeat : seat;
+  const t = teamOf(seat);
+  const claims = [];
+  for (let i = 0; i < 4; i++){
+    if (teamOf(i) === t && G.seatClaims && G.seatClaims[i]) claims.push(...G.seatClaims[i]);
+  }
+  if ((G.chakkaCall && G.chakkaCall.team === t) || claims.includes('CHAKKA')) return false;
+  if (kind === 'kot') return !claims.includes('COURT');
+  if (kind === 'peace') return !claims.includes('PIECE');
+  return canCallNow('kot', seat) || canCallNow('peace', seat);
 }
 
 function responderPanelHTML(){
@@ -1996,7 +2272,7 @@ function runAiResponse(kind){
     let yes;
     if (votes[0] && votes[1] && votes[0] === votes[1]) yes = votes[0] === 'ghalat';
     else yes = (handStrength(seats[0]) + handStrength(seats[1])) < 18;   // 1-1: maqabil khud
-    const label = kind === 'peace' ? (yes ? 'Han PEACE' : 'PEACE Nahi Hai') : (yes ? 'Han KOT' : 'KOT Nahi Hai');
+    const label = kind === 'peace' ? (yes ? 'Han PIECE' : 'PIECE Nahi Hai') : (yes ? 'Han COURT' : 'COURT Nahi Hai');
     const d = $('respDecision');
     if (d){
       const mk = d.querySelector('.kp-mark');
@@ -2021,8 +2297,8 @@ function openCallResponseModal(kind, callerTeam){
   G.khowasha = null;
   G.khowashaPartner = (typeof netOnline === 'function' && netOnline()) ? (G.khowashaPartner || null) : aiKhowashaVote();
   G.khowashaFor = kind;
-  const yesLbl = kind === 'peace' ? 'Han PEACE' : 'Han KOT';
-  const noLbl = kind === 'peace' ? 'PEACE Nahi Hai' : 'KOT Nahi Hai';
+  const yesLbl = kind === 'peace' ? 'Han PIECE' : 'Han COURT';
+  const noLbl = kind === 'peace' ? 'PIECE Nahi Hai' : 'COURT Nahi Hai';
   const yesId = kind === 'peace' ? 'btnPeaceYes' : 'btnKotYes';
   const noId = kind === 'peace' ? 'btnPeaceNo' : 'btnKotNo';
   if (window.__CP_AUTO_HUMAN){
@@ -2035,15 +2311,15 @@ function openCallResponseModal(kind, callerTeam){
     }, Math.max(30, 300 * SPEED));
     return;
   }
-  openOverlay(
-    '<div class="modal-head">' + (kind === 'peace' ? 'PEACE!' : 'KOT!') + '</div>' +
-    '<p class="sub">Maqabil team <b>' + teamName(callerTeam) + '</b> ne <b>' + (kind === 'peace' ? 'PEACE' : 'KOT') + '</b> kaha he.<br>Ab <b>jawab aap aur aapke saathi ka</b> &mdash; game yahin <b>freez</b> he.</p>' +
+  openOverlayNB(
+    '<div class="modal-head">' + (kind === 'peace' ? 'PIECE!' : 'COURT!') + '</div>' +
+    '<p class="sub">Maqabil team <b>' + teamName(callerTeam) + '</b> ne <b>' + (kind === 'peace' ? 'PIECE' : 'COURT') + '</b> kaha he.</p>' +
     '<div class="note" style="text-align:center">Aap ka jawab?</div>' +
     '<div class="modal-actions">' +
       '<button class="btn-primary" id="' + yesId + '">' + yesLbl + '</button>' +
       '<button class="btn-ghost" id="' + noId + '">' + noLbl + '</button>' +
     '</div>' +
-    khowashaHTML()
+    khowashaHTML() + decisionRangHTML()
   );
   $(yesId).addEventListener('click', () => {
     sfx('click');
@@ -2058,22 +2334,24 @@ function openCallResponseModal(kind, callerTeam){
 }
 
 function aiMaybeCall(seat){
-  // AI khilaf-walon ka challenge: zabardast haath -> KOT; insaan team kamzor -> PEACE
+  // AI khilaf-walon ka challenge: zabardast haath -> COURT; insaan team kamzor -> PIECE
   if (!G || window.__CP_AUTO_HUMAN) return false;
-  if (seat == null || seat === G.humanSeat || !canCallNow()) return false;
+  if (seat == null || seat === G.humanSeat || !canCallNow(null, seat)) return false;
   const aiTeam = teamOf(seat), huTeam = 1 - aiTeam;
   const aiS = teamStrength(aiTeam), huS = teamStrength(huTeam);
-  if (G.tricks[huTeam] === 0 && aiS >= 34){ callKot(aiTeam, seat); return true; }
-  if (aiS >= 23 && huS <= 18 && (G.center.length || 0) >= 1){ callPeace(aiTeam, seat); return true; }
+  if (canCallNow('kot', seat) && G.tricks[huTeam] === 0 && aiS >= 34){ callKot(aiTeam, seat); return true; }
+  if (canCallNow('peace', seat) && aiS >= 23 && huS <= 18 && (G.center.length || 0) >= 1){ callPeace(aiTeam, seat); return true; }
   return false;
 }
 
 function callKot(byTeam, bySeat){
   if (byTeam == null && typeof netAct === 'function' && netAct({ t: 'call', what: 'kot' })) return;
-  if (!canCallNow()) return;
+  const requestedSeat = bySeat != null ? bySeat : (byTeam == null || byTeam === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0]);
+  if (!canCallNow('kot', requestedSeat)) return;
   const callerTeam = (byTeam == null) ? teamOf(G.humanSeat) : byTeam;
   G.callTeam = callerTeam;
   G.callSeat = (bySeat != null) ? bySeat : (callerTeam === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0]);
+  markSeatClaim(G.callSeat, 'COURT');
   G.paused = true;
   sfx('trump');
   render();
@@ -2092,19 +2370,17 @@ function openCallUIFor(kind, callerTeam){
   }
   const opp = 1 - callerTeam;
   G.khowasha = null; G.khowashaPartner = null; G.khowashaFor = kind;
-  const body = isPeace
-    ? callerLabel + ' <b>PEACE</b> maang raha he.<br>Maqabil team <b>' + teamName(opp) + '</b> <b>khud</b> faisla kar rahi he &mdash; <b>Han PEACE</b> ya <b>PEACE Nahi Hai</b>.<br>Game freez he.'
-    : callerLabel + ' ne <b>KOT</b> kaha he.<br>Maqabil team <b>' + teamName(opp) + '</b> <b>khud</b> faisla kar rahi he &mdash; <b>Han KOT</b> ya <b>KOT Nahi Hai</b>.<br>Game yahin <b>freez</b> ho gaya he.';
-  openOverlay(
-    '<div class="modal-head">' + (isPeace ? 'PEACE?' : 'KOT!') + '</div>' +
+  const body = callerLabel + ' ne <b>' + (isPeace ? 'PIECE' : 'COURT') + '</b> kaha he.';
+  openOverlayNB(
+    '<div class="modal-head">' + (isPeace ? 'PIECE?' : 'COURT!') + '</div>' +
     '<p class="sub">' + body + '</p>' +
-    responderPanelHTML()
+    responderPanelHTML() + decisionRangHTML()
   );
   if (!(typeof netOnline === 'function' && netOnline())) runAiResponse(kind);
 }
 
 function kotAccepted(){
-  // "Han KOT" — deal foran khatam, aur agli deal usi bande ko jis ne Rang chuna tha
+  // "Han COURT" — deal foran khatam, aur agli deal usi bande ko jis ne Rang chuna tha
   if (typeof netUi === 'function') netUi('shadow', { fn: 'kotAccepted' });
   closeModal();
   if (!G) return;
@@ -2117,9 +2393,9 @@ function kotAccepted(){
 }
 
 function kotDenied(tOverride){
-  // "KOT Nahi Hai" — DENY karne wali team aapas me patte dikha leti he.
+  // "COURT Nahi Hai" — DENY karne wali team aapas me patte dikha leti he.
   // Caller ko kabhi nahi: maqabil ne deny kiya -> unke patte UNHE aapas me (aap ko kuch nahi);
-  // aap ne deny kiya -> saathi ke patte aap ko, aap ke patte saathi ko (sirf 10 second).
+  // aap ne deny kiya -> saathi ke patte aap ko, aap ke patte saathi ko (sirf 25 second).
   if (!G) return;
   const t = (tOverride != null) ? tOverride : ((G.callTeam == null) ? teamOf(G.humanSeat) : G.callTeam);
   const humanDenied = teamOf(G.humanSeat) !== t;
@@ -2133,8 +2409,8 @@ function kotDenied(tOverride){
     // CASE A: maqabil ne deny kiya — unke patte unhe hi aapas me dikhe (caller ko kuch nahi)
     closeModal();
     if (typeof netOnline === 'function' && netOnline()){
-      G.paused = true;               // deniers ka 10s reveal mukammal hone do
-      toast('Unhone aapas me patte dikha liye (sirf unke liye) — 10 second…');
+      G.paused = true;               // deniers ka 25s reveal mukammal hone do
+      toast('Unhone aapas me patte dikha liye (sirf unke liye) — 25 second…');
       render();
       return;
     }
@@ -2153,18 +2429,18 @@ function kotDenied(tOverride){
         sortHand(G.hands[st] || [], G.trump).map(c => cardHTML(c)).join('') +
       '</div>' +
     '</div>';
-  openOverlay(
-    '<div class="modal-head">KOT Nahi Hai</div>' +
-    '<p class="sub">Aap aur saathi ne kaha &mdash; <b>KOT nahi he</b>.<br>Aap dono ne <b>aapas me patte dikha liye</b> (aap ke patte bhi saathi ko) &mdash; <b>sirf 10 second</b>.<br>Time khatam hote hi (ya OK par) sab ke apne hi patte wapas.</p>' +
+  openOverlayNB(
+    '<div class="modal-head">COURT Nahi Hai</div>' +
+    '<p class="sub">Aap aur saathi ne kaha &mdash; <b>COURT nahi he</b>.<br>Aap dono ne <b>aapas me patte dikha liye</b> (aap ke patte bhi saathi ko) &mdash; <b>sirf 25 second</b>.<br>Time khatam hote hi (ya OK par) sab ke apne hi patte wapas.</p>' +
     rows +
     '<div class="modal-actions" style="margin-top:14px">' +
-      '<button class="btn-primary" id="btnKotOk">OK — Dekh Liya (10s)</button>' +
+      '<button class="btn-primary" id="btnKotOk">OK — Dekh Liya (25s)</button>' +
     '</div>',
     'w-reveal'
   );
-  // sirf 10 second — phir khud OK dab jata he
+  // sirf 25 second — phir khud OK dab jata he
   const gRev = GEN;
-  const endAt = Date.now() + Math.max(250, 10000 * SPEED);
+  const endAt = Date.now() + Math.max(250, 25000 * SPEED);
   const closeReveal = () => {
     sfx('click');
     closeModal();
@@ -2198,16 +2474,18 @@ function peaceDenied(){
   G.callTeam = null; G.callSeat = null;
   closeModal();
   G.paused = false;
-  toast(humanDenied ? 'Aap aur saathi ne kaha — PEACE nahi he. Khel jari he.' : 'Maqabil team ne kaha — PEACE nahi he. Khel jari he.');
+  toast(humanDenied ? 'Aap aur saathi ne kaha — PIECE nahi he. Khel jari he.' : 'Maqabil team ne kaha — PIECE nahi he. Khel jari he.');
   render();
   drive();
 }
 function callPeace(byTeam, bySeat){
   if (byTeam == null && typeof netAct === 'function' && netAct({ t: 'call', what: 'peace' })) return;
-  if (!canCallNow()) return;
+  const requestedSeat = bySeat != null ? bySeat : (byTeam == null || byTeam === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0]);
+  if (!canCallNow('peace', requestedSeat)) return;
   const callerTeam = (byTeam == null) ? teamOf(G.humanSeat) : byTeam;
   G.callTeam = callerTeam;
   G.callSeat = (bySeat != null) ? bySeat : (callerTeam === teamOf(G.humanSeat) ? G.humanSeat : opponentSeats()[0]);
+  markSeatClaim(G.callSeat, 'PIECE');
   G.paused = true;
   sfx('click');
   render();
@@ -2222,6 +2500,7 @@ function peaceAccepted(){
   const t = (G.callTeam == null) ? teamOf(G.humanSeat) : G.callTeam;
   G.paused = false;
   G.roundPeace = true;
+  G.peaceAcceptedTeam = t;
   G.peaceWinner = (G.tricks[0] === G.tricks[1]) ? (1 - t)
                 : (G.tricks[0] > G.tricks[1] ? 0 : 1);
   G.callTeam = null;
@@ -2242,14 +2521,14 @@ function openRulesModal(returnFn){
       '<li><b>Lagataar 3 hath:</b> sirf <b>usi ek khelari</b> ka count hota he — dono partners ka mila kar nahi. Wohi khelari jab <b>3 lagataar</b> baaziyan jeete, to poora centre pile uska (aur uski team ka). Agar beech me us ke <b>sathi ne</b> koi baazi jeet li (chahe upar bara patta hi phenk de) to lagataar count <b>phir se shuru</b>. Agar 2 jeet kar teesra haar gaya to patte wahin pare rehte hain — kisi ke nahi.</li>' +
       '<li><b>Phir do-do hath ka game:</b> ek dafa collection ho jaye to us deal ke baqi hisse me sirf <b>2 lagataar</b> hath kaafi hain.</li>' +
       '<li><b>Aakhri hath:</b> 13th (aakhri) baazi jeetne wala baqi saara centre pile utha leta hai.</li>' +
-      '<li><b>Deal ka nateeja:</b> 7 se ziyada hath wali team jeeti = <b>1 point</b> aur doosri team <b>PEACE</b>. Saare 13 hath = <b>KOT</b> = <b>2 points</b>.</li>' +
+      '<li><b>Deal ka nateeja:</b> 7 se ziyada hath wali team jeeti = <b>1 point</b> aur doosri team <b>PIECE</b>. Saare 13 hath = <b>COURT</b> = <b>2 points</b>.</li>' +
       '<li><b>Hakim ki team</b> jeete to Hakim wahi; hare to Hakimiyat doosri team ko.</li>' +
       '<li><b>Match:</b> jo pehle <b>7 points</b> poore kare, wohi match winner.</li>' +
-      '<li><b>CHAKKA:</b> agar Hakim ke pehle 5 patton me <b>rang ka A</b> ho, to deal rukti he aur usay <b>CHAKKA</b> batan milta he.<br>• <b>“Han Chakka He”</b> (doosri team) → chakka wali team ko <b>2 points</b> aur deal dobara shuru.<br>• <b>“Chakka Nahi He”</b> → khel shuru. Agar phir bhi KOT ho gaya → chakka wali team ko <b>3 points</b>.<br>• Aur agar rang banane wali (chakka) team hi KOT ho gayi → doosri team ko <b>4 points</b>.</li>' +
-      '<li><b>KOT button (challenge):</b> khel ke doran dabaen — game freez ho jata he. Jis team ne call kiya, <b>options uski maqabil team ko</b> &mdash; caller ko kabhi nahi; agar <b>maqabil team</b> KOT kahe to jawab <b>aap + saathi</b> dete hain. Faisla <b>maqabil team ka</b> hota he — woh <b>khud</b> decide karte hain (unka khowasha + unka faisla + deny par patte bhi <b>sirf unhe</b> dikhte hain &mdash; aap ko sirf faisla pata chalta he).<br>• <b>“Han KOT”</b> — deal foran khatam, kot bolne wali team ko <b>1 point</b>, aur agli deal usi ko jis ne Rang chuna tha.<br>• <b>“KOT Nahi Hai”</b> — <b>deny karne wali team</b> aapas me patte dikha leti he (sirf unhe): maqabil ne deny kiya to unke patte <b>unhe hi</b> aapas me — aap ko kuch nahi; aap ne deny kiya to <b>saathi ke patte aap ko</b> (aap ke patte saathi ko) — <b>10 second</b>, countdown <b>OK</b>, phir khud band. Deal ke aakhir me:<br>&nbsp;&nbsp;– agar KOT sabit ho jaye (unke 0 hath) → aap ko <b>2 points</b>.<br>&nbsp;&nbsp;– agar KOT sabit na ho aur unhon ne hath utaye (3+) → unhe <b>1 point</b>.<br>• <b>Bina KOT call ke</b> saare 13 hath = sirf <b>1 point</b>.</li>' +
-      '<li><b>PEACE button (challenge):</b> jis team ne call kiya, faisla <b>uski maqabil team ka</b> (agar maqabil team PEACE kahe to jawab aap + saathi dete hain) — woh khud decide karte hain (unka khowasha + unka faisla).<br>• <b>“Han PEACE”</b> — deal wahin khatam, magar <b>kisi ko point nahi</b> milta.<br>• <b>“PEACE Nahi Hai”</b> — khel jari rehta he. Deal ke aakhir me:<br>&nbsp;&nbsp;– unke <b>7 se kam hath</b> → <b>1 point</b> PEACE bolne wali team ko.<br>&nbsp;&nbsp;– unke <b>7 se ziyada hath</b> → unhe <b>1 point</b>.<br>&nbsp;&nbsp;– agar <b>rang banane wali team</b> ne PEACE kaha aur wo khud <b>KOT</b> ho gayi → doosri team ko <b>3 points</b>.<br>&nbsp;&nbsp;– agar rang banane wali team ne “PEACE Nahi Hai” kaha aur unhone <b>poore 13 hath</b> uthaaye → rang team ko <b>2 points</b>.</li>' +
+      '<li><b>CHAKKA:</b> agar Hakim ke pehle 5 patton me <b>rang ka A</b> ho, to deal rukti he aur usay <b>CHAKKA</b> batan milta he.<br>• <b>“Han Chakka He”</b> (doosri team) → chakka wali team ko <b>2 points</b> aur deal dobara shuru.<br>• <b>“Chakka Nahi He”</b> → khel shuru. Agar phir bhi COURT ho gaya → chakka wali team ko <b>3 points</b>.<br>• Aur agar rang banane wali (chakka) team hi COURT ho gayi → doosri team ko <b>4 points</b>.</li>' +
+      '<li><b>COURT button (challenge):</b> khel ke doran dabaen — game freez ho jata he. Jis team ne call kiya, <b>options uski maqabil team ko</b> &mdash; caller ko kabhi nahi; agar <b>maqabil team</b> COURT kahe to jawab <b>aap + saathi</b> dete hain. Faisla <b>maqabil team ka</b> hota he — woh <b>khud</b> decide karte hain (unka khowasha + unka faisla + deny par patte bhi <b>sirf unhe</b> dikhte hain &mdash; aap ko sirf faisla pata chalta he).<br>• <b>“Han COURT”</b> — deal foran khatam, court bolne wali team ko <b>1 point</b>, aur agli deal usi ko jis ne Rang chuna tha.<br>• <b>“COURT Nahi Hai”</b> — <b>deny karne wali team</b> aapas me patte dikha leti he (sirf unhe): maqabil ne deny kiya to unke patte <b>unhe hi</b> aapas me — aap ko kuch nahi; aap ne deny kiya to <b>saathi ke patte aap ko</b> (aap ke patte saathi ko) — <b>25 second</b>, countdown <b>OK</b>, phir khud band. Deal ke aakhir me:<br>&nbsp;&nbsp;– agar COURT sabit ho jaye (unke 0 hath) → aap ko <b>2 points</b>.<br>&nbsp;&nbsp;– agar COURT sabit na ho aur unhon ne hath utaye (3+) → unhe <b>1 point</b>.<br>• <b>Bina COURT call ke</b> saare 13 hath = sirf <b>1 point</b>.</li>' +
+      '<li><b>PIECE button (challenge):</b> jis team ne call kiya, faisla <b>uski maqabil team ka</b> (agar maqabil team PIECE kahe to jawab aap + saathi dete hain) — woh khud decide karte hain (unka khowasha + unka faisla).<br>• <b>“Han PIECE”</b> — deal wahin khatam, magar <b>kisi ko point nahi</b> milta.<br>• <b>“PIECE Nahi Hai”</b> — khel jari rehta he. Deal ke aakhir me:<br>&nbsp;&nbsp;– unke <b>7 se kam hath</b> → <b>1 point</b> PIECE bolne wali team ko.<br>&nbsp;&nbsp;– unke <b>7 se ziyada hath</b> → unhe <b>1 point</b>.<br>&nbsp;&nbsp;– agar <b>rang banane wali team</b> ne PIECE kaha aur wo khud <b>COURT</b> ho gayi → doosri team ko <b>3 points</b>.<br>&nbsp;&nbsp;– agar rang banane wali team ne “PIECE Nahi Hai” kaha aur unhone <b>poore 13 hath</b> uthaaye → rang team ko <b>2 points</b>.</li>' +
     '<li><b>Khowasha (andaza):</b> khowasha sirf <b>jawab dene wali team</b> ko dikhta he — jab aap/sathi call karein to unka khowasha <b>unhe hi</b> (aap ko nahi); jab wo call karein to aap + saathi ke khowasha (✓ Sahi / ✗ Ghalat) lagte hain — saathi ka naam aur uska nishan wahin dikhta he.<br>• Dono <b>sahi</b> → <b>“… Nahi”</b> wala button khud dab jata he.<br>• Dono <b>ghalat</b> → <b>“Han …”</b> wala button khud dab jata he.<br>• Ek sahi, ek ghalat → koi auto nahi — aap khud button dabayein.</li>' +
-    '<li><b>Slam (patta zameen par):</b> PEACE ke sath wale <b>hath-icon</b> par click kar ke patta chunein — slam sirf tab jab aapka patta <b>ye hath pakka jeet raha ho</b>: maidan ke tamam patton se bara ho (chota patta bhi chalta he — sirf in 4 me sabse bara ho), maidan me koi <b>trump/rang</b> aapke patte ko na hara raha ho, aur agar aapke baad koi aur khelega to <b>kisi ke paas</b> koi aisa patta na ho jo aapke patte ko <b>khel kar</b> hara de (suit follow ki majboori me phansa patta — jo wo khel hi nahi sakta — shamil nahi) (jab aap hath ka <b>aakhri</b> patta phenk rahe hon to sirf maidan se bara hona kafi he). Kisi aur ke rang ke upar bagair-trump patta — chahe sabse bara hi kyun na ho — slam nahi karta (wo hath nahi utha sakta). Slam par patta <b>zor se</b> girta he: awaz, matti ki phuhar aur screen ki halki hulchul.</li>' +
+    '<li><b>Slam (patta zameen par):</b> PIECE ke sath wale <b>hath-icon</b> par click kar ke patta chunein — slam sirf tab jab aapka patta <b>ye hath pakka jeet raha ho</b>: maidan ke tamam patton se bara ho (chota patta bhi chalta he — sirf in 4 me sabse bara ho), maidan me koi <b>trump/rang</b> aapke patte ko na hara raha ho, aur agar aapke baad koi aur khelega to <b>kisi ke paas</b> koi aisa patta na ho jo aapke patte ko <b>khel kar</b> hara de (suit follow ki majboori me phansa patta — jo wo khel hi nahi sakta — shamil nahi) (jab aap hath ka <b>aakhri</b> patta phenk rahe hon to sirf maidan se bara hona kafi he). Kisi aur ke rang ke upar bagair-trump patta — chahe sabse bara hi kyun na ho — slam nahi karta (wo hath nahi utha sakta). Slam par patta <b>zor se</b> girta he: awaz, matti ki phuhar aur screen ki halki hulchul.</li>' +
     '</ol>' +
     '<p class="hint">Tip: lagataar hath banao — 1-2 hath ka koi faida nahi, aur pile 3 (ya 2) lagataar par hi uthta hai. Aakhri hath sab se qeemti hai!</p>' +
     '<button class="btn-primary" id="btnCloseRules">Samajh Gaya</button>'
@@ -2319,6 +2598,7 @@ function viewFor(seat){
   });
   v.deck = [];
   v.humanSeat = seat;
+  v.gamesWon = (gameWins || [0, 0]).slice();
   const votes = G.votes || {};
   v.khowasha = (votes[seat] != null) ? votes[seat] : null;
   v.khowashaPartner = (votes[partnerSeatOf(seat)] != null) ? votes[partnerSeatOf(seat)] : null;
@@ -2346,7 +2626,7 @@ function netApplyView(view){
   khowashaRefresh();
 }
 function netShadow(fn, args){
-  const map = { kotAccepted: kotAccepted, kotDenied: kotDenied, peaceAccepted: peaceAccepted, peaceDenied: peaceDenied, resolveChakka: resolveChakka };
+  const map = { kotAccepted: kotAccepted, kotDenied: kotDenied, peaceAccepted: peaceAccepted, peaceDenied: peaceDenied, resolveChakka: resolveChakka, chakkaWait: chakkaWait, chakkaNaat: chakkaNaat };
   const f = map[fn];
   if (f) f.apply(null, args || []);
 }
@@ -2357,7 +2637,8 @@ function netUiApply(name, data){
       if (G.phase === 'trump' && G.hakim === G.humanSeat && !G.trump) openTrumpModal();
       break;
     case 'chakkaOffer':
-      if (G.hakim === G.humanSeat && !G.chakkaCall) openChakkaOfferModal();
+      { const cs = (data && data.seat != null) ? data.seat : chakkaAceSeat();
+        if (cs === G.humanSeat) openChakkaOfferModal(cs); }
       break;
     case 'chakkaResponse':
       if (G.chakkaCall && teamOf(G.humanSeat) !== G.chakkaCall.team) openChakkaResponseModal();
@@ -2368,6 +2649,10 @@ function netUiApply(name, data){
     case 'shadow':
       if (data) netShadow(data.fn, data.args);
       break;
+    case 'nextgameVotes':
+      G.nextGameVotes = data.votes;
+      updateNextGameRows();
+      break;
     case 'roundModal':
       if ((data && data.matchOver) || G.matchOver) openMatchModal(data ? data.retained : false);
       else openRoundModal(data ? data.retained : false);
@@ -2376,7 +2661,7 @@ function netUiApply(name, data){
       closeModal();
       break;
     case 'slamFx':
-      if (data && data.seat !== G.humanSeat) slamFxAt(data.seat);
+      if (data && data.seat != null) slamFxAt(data.seat);
       break;
   }
 }
@@ -2388,18 +2673,25 @@ function netOnAct(m, from){
   switch (m.t){
     case 'play': {
       const c = (G.hands[seat] || []).find(x => x.id === m.id);
-      if (!c) return;
-      if (m.slam){
-        slamFxAt(seat);
-        netUi('slamFx', { seat });
-      }
-      doPlay(seat, c);
+      if (!c || G.phase !== 'playing' || G.paused || G.busy || G.turn !== seat || !legalCards(seat).some(x => x.id === c.id)) return;
+      doPlay(seat, c, !!m.slam);
       break;
     }
-    case 'trump': applyTrump(m.suit); break;
-    case 'chakkaPress': pressChakka(); break;
-    case 'chakkaSkip': continueDealAfterTrump(); break;
-    case 'chakkaAnswer': resolveChakka(!!m.v); break;
+    case 'trump':
+      if (seat === G.hakim && SUIT_ORDER.includes(m.suit)) applyTrump(m.suit);
+      break;
+    case 'chakkaPress': if (seat === chakkaAceSeat()) pressChakka(seat); break;
+    case 'chakkaSkip':
+      if (G.phase === 'chakka' && !G.chakkaCall && seat === chakkaAceSeat()) continueDealAfterTrump();
+      break;
+    case 'chakkaAnswer':
+      if (!G.chakkaCall || G.phase !== 'chakka' || G.chakkaCall.status !== 'pending' || teamOf(seat) === G.chakkaCall.team) return;
+      if (m.v === 'naat') chakkaNaat(seat);
+      else resolveChakka(m.v === true || m.v === 'true');
+      break;
+    case 'chakkaWait':
+      if (G.chakkaCall && teamOf(seat) !== G.chakkaCall.team) chakkaWait();
+      break;
     case 'call':
       if (m.what === 'peace') callPeace(teamOf(seat), seat);
       else callKot(teamOf(seat), seat);
@@ -2416,8 +2708,10 @@ function netOnAct(m, from){
       khowashaRefresh();
       break;
     case 'next': nextRound(); break;
+    case 'nextgame': applyNextGameVote(teamOf(seat)); break;
     case 'rematch': startMatch(setup); break;
     case 'revealDone':
+      if (G.revealTeam == null || teamOf(seat) !== G.revealTeam) return;
       netUi('revealClose');
       G.reveal = []; G.revealTeam = null; G.paused = false; render(); drive();
       break;
@@ -2489,7 +2783,7 @@ function netOnMessage(msg){
       closeModal();
       if (NET.host){
         const names = (msg.names || NET.names).map((x, i) => x || ('Player ' + (i + 1)));
-        startMatch({ names, humanSeat: NET.seat, target: 7, streakMode: 'player' });
+        startMatch({ names, humanSeat: NET.seat, target: 7, streakMode: 'player', cutDeal: true });
       } else {
         toast('Khel shuru ho raha he…');
       }
@@ -2605,6 +2899,7 @@ function refreshTableBtns(){
 }
 render = function(){
   _netRenderBase();
+  fitDecisionPanel();
   try { refreshTableBtns(); } catch(e){}
   netBroadcast();
 };
@@ -2694,5 +2989,6 @@ window.CP = {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4cabaf97a309248',t:'MTc5MjM1OTkyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+</body>
 </html>
